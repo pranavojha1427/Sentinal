@@ -1,43 +1,21 @@
-"use server";
+import { NextResponse } from 'next/server';
 
-import { createClient } from "@/utils/supabase/server";
+export async function POST(req: Request) {
+  try {
+    const projects = await req.json();
 
-export async function getAIHealthScores() {
-  const supabase = await createClient();
-  let projects: any[] = [];
-  let page = 0;
-  const pageSize = 1000;
-  let fetchMore = true;
-
-  while (fetchMore) {
-    const { data, error } = await supabase
-      .from("projects")
-      .select("id, original_cost, revised_cost, cumulative_expenditure, physical_progress, sector, agency, state, land_acquisition_issue, forest_clearance_issue, contractor_delay, burn_rate_6m, phys_burn_rate_6m")
-      .range(page * pageSize, (page + 1) * pageSize - 1);
-    
-    if (error) {
-      console.error("Error fetching from supabase", error);
-      break;
+    if (!Array.isArray(projects)) {
+      return NextResponse.json({ error: "Expected an array of projects" }, { status: 400 });
     }
-    
-    if (data && data.length > 0) {
-      projects = [...projects, ...data];
-      page++;
-      if (data.length < pageSize) fetchMore = false;
-    } else {
-      fetchMore = false;
-    }
-  }
 
-  const scores: Record<number, any> = {};
-
-  projects.forEach((data) => {
+    const results = projects.map((data: any) => {
       const original_cost = Number(data.original_cost) || 0;
       const revised_cost = Number(data.revised_cost) || 0;
-      const expenditure = Number(data.cumulative_expenditure) || 0;
+      const expenditure = Number(data.expenditure) || 0;
       const physical_progress = Number(data.physical_progress) || 0;
 
       const cost_escalation = revised_cost - original_cost;
+      
       let cost_overrun_percent = 0.0;
       if (original_cost > 0) {
           cost_overrun_percent = (cost_escalation / original_cost) * 100;
@@ -81,27 +59,32 @@ export async function getAIHealthScores() {
           }
       }
 
-      scores[data.id] = {
-          overall_health,
-          recommendation,
-          SHAP_Explanation: shap_explanations,
-          cost_overrun_score: cost_overrun_score.toFixed(0),
-          schedule_risk_score: schedule_risk_score.toFixed(0)
+      return {
+        project_id: data.project_id,
+        predictions: {
+            predicted_cost_overrun_pct: Number(cost_overrun_percent.toFixed(2)),
+            predicted_time_overrun_months: Number((schedule_risk_score / 2).toFixed(2)) // mock representation
+        },
+        shap_attribution: {
+            top_cost_drivers: {},
+            top_time_drivers: {}
+        },
+        rule_based: {
+            cost_overrun_score: Number(cost_overrun_score.toFixed(2)),
+            schedule_risk_score: Number(schedule_risk_score.toFixed(2)),
+            overall_health: overall_health,
+            recommendation: recommendation,
+            cost_escalation_crores: Number(cost_escalation.toFixed(2)),
+            cost_overrun_percentage: Number(cost_overrun_percent.toFixed(2)),
+            implementation_discrepancy_percentage: Number(implementation_discrepancy.toFixed(2)),
+            SHAP_Explanation: shap_explanations
+        }
       };
-  });
+    });
 
-  return scores;
-}
-
-export async function updateAlertStatus(alertId: number) {
-  const supabase = await createClient();
-  const { error } = await supabase
-    .from("project_alerts")
-    .update({ status: "Escalated" })
-    .eq("id", alertId);
-    
-  if (error) {
-    console.error("Error updating alert status:", error);
-    throw new Error(error.message);
+    return NextResponse.json(results);
+  } catch (error: any) {
+    console.error("Bulk predict error:", error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

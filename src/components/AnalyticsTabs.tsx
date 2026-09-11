@@ -157,7 +157,7 @@ function RiskPredictionTab() {
     setError("");
     setResult(null);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || ""}/api/v1/predict-risk`, {
+      const res = await fetch(`/api/v1/predict-risk`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -172,6 +172,7 @@ function RiskPredictionTab() {
           forest_clearance_issue: 0,
           contractor_delay: 0
         }),
+        signal: AbortSignal.timeout(2000),
       });
       if (!res.ok) throw new Error(`Server responded with ${res.status}`);
       const data = await res.json();

@@ -18,7 +18,7 @@ export function ProjectTable({ projects }: { projects: any[] }) {
     setIsLoading(true)
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || ""}/api/v1/predict-risk`, {
+      const res = await fetch(`/api/v1/predict-risk`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -26,7 +26,8 @@ export function ProjectTable({ projects }: { projects: any[] }) {
           revised_cost: p.revised_cost || 0,
           expenditure: p.cumulative_expenditure || 0,
           physical_progress: p.physical_progress || 0
-        })
+        }),
+        signal: AbortSignal.timeout(2000),
       })
       if (res.ok) {
         const data = await res.json()

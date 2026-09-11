@@ -45,14 +45,17 @@ export default function ChatAssistant() {
     setIsLoading(true);
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || ""}/api/chat`, {
+      const url = "/api/chat";
+      const response = await fetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: userMessage }),
+        signal: AbortSignal.timeout(30000),
       });
 
       if (!response.ok) {
-        throw new Error("Failed to communicate with API");
+        const errText = await response.text();
+        throw new Error(`Failed to communicate with API. Status: ${response.status}. URL: ${url}. Response: ${errText}`);
       }
 
       const data = await response.json();
@@ -60,11 +63,11 @@ export default function ChatAssistant() {
         ...prev,
         { role: "assistant", content: data.response },
       ]);
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
       setMessages((prev) => [
         ...prev,
-        { role: "assistant", content: "**Error:** Unable to reach the assistant API. Make sure the backend is running." },
+        { role: "assistant", content: `**Error:** Unable to reach the assistant API. Details: ${error?.message || "Unknown error"}. Make sure the backend is running.` },
       ]);
     } finally {
       setIsLoading(false);

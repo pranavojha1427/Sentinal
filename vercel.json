@@ -1,9 +1,3 @@
 {
-  "installCommand": "npm install --legacy-peer-deps",
-  "rewrites": [
-    {
-      "source": "/api/(.*)",
-      "destination": "/api/index.py"
-    }
-  ]
+  "installCommand": "npm install --legacy-peer-deps"
 }
