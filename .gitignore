@@ -53,3 +53,5 @@ FlashReport_April2026.pdf
 test_table.py
 inspect_pdf.py
 verify_db.py
+
+.vercel

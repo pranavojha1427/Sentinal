@@ -11,9 +11,9 @@ interface Message {
 }
 
 const PREPOPULATED_PROMPTS = [
-  "Summarize critical railway projects in Assam",
-  "Which projects have the highest cost overrun?",
-  "Show me delayed projects in Energy sector"
+  "Which railway projects in Assam have cost overruns > 20%?",
+  "What is the total original cost vs revised cost for projects in Maharashtra?",
+  "Summarize critical projects showing highest delays"
 ];
 
 export default function ChatAssistant() {
@@ -45,7 +45,7 @@ export default function ChatAssistant() {
     setIsLoading(true);
 
     try {
-      const response = await fetch("http://localhost:8000/api/chat", {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || ""}/api/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: userMessage }),
@@ -135,7 +135,21 @@ export default function ChatAssistant() {
                   {msg.role === "user" ? (
                     <p className="whitespace-pre-wrap m-0">{msg.content}</p>
                   ) : (
-                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                    <ReactMarkdown 
+                      remarkPlugins={[remarkGfm]}
+                      components={{
+                        table: ({ node, ...props }) => (
+                          <div className="overflow-x-auto my-3 rounded border border-gray-200">
+                            <table className="w-full border-collapse text-sm" {...props} />
+                          </div>
+                        ),
+                        thead: ({ node, ...props }) => <thead className="bg-gray-100 text-gray-800 font-mono" {...props} />,
+                        tbody: ({ node, ...props }) => <tbody className="divide-y divide-gray-200" {...props} />,
+                        tr: ({ node, ...props }) => <tr className="hover:bg-gray-50 transition-colors" {...props} />,
+                        th: ({ node, ...props }) => <th className="p-2 text-left font-semibold border-b border-gray-200" {...props} />,
+                        td: ({ node, ...props }) => <td className="p-2 text-gray-700" {...props} />,
+                      }}
+                    >
                       {msg.content}
                     </ReactMarkdown>
                   )}

@@ -133,10 +133,10 @@ export function StateDistributionChart({ data }: { data: any[] }) {
                 // format correctly like ₹5,42,567.88 cr
                 const formattedCost = new Intl.NumberFormat('en-IN', { maximumFractionDigits: 2, minimumFractionDigits: 2 }).format(cost);
                 return (
-                  <div className="bg-black text-white p-3 rounded-md shadow-lg border border-zinc-800">
+                  <div className="bg-black text-white p-3 rounded-md shadow-lg border border-slate-200">
                     <p className="font-bold text-base mb-1">{data.state}</p>
-                    <p className="text-sm text-zinc-300">Project Count: <span className="text-white font-medium">{data.count}</span></p>
-                    <p className="text-sm text-zinc-300">Original Cost: <span className="text-white font-medium">₹{formattedCost} cr</span></p>
+                    <p className="text-sm text-slate-700">Project Count: <span className="text-white font-medium">{data.count}</span></p>
+                    <p className="text-sm text-slate-700">Original Cost: <span className="text-white font-medium">₹{formattedCost} cr</span></p>
                   </div>
                 );
               }

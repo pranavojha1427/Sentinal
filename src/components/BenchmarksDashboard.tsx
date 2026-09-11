@@ -106,8 +106,8 @@ export function BenchmarksDashboard({ projects, benchmarks }: { projects: Projec
           <h3 className="text-lg font-medium text-slate-800 self-start mb-6 border-b border-slate-100 w-full pb-2">
             Performance Radar
           </h3>
-          <div className="w-full h-[350px]">
-            <ResponsiveContainer width="100%" height="100%">
+          <div className="w-full min-h-[350px] relative">
+            <ResponsiveContainer width="100%" height={350}>
               <RadarChart cx="50%" cy="50%" outerRadius="70%" data={chartData}>
                 <PolarGrid stroke="#e2e8f0" />
                 <PolarAngleAxis dataKey="metric" tick={{ fill: '#64748b', fontSize: 12, fontWeight: 500 }} />
@@ -129,8 +129,8 @@ export function BenchmarksDashboard({ projects, benchmarks }: { projects: Projec
           <h3 className="text-lg font-medium text-slate-800 self-start mb-6 border-b border-slate-100 w-full pb-2">
             Comparative Variance
           </h3>
-          <div className="w-full h-[350px]">
-            <ResponsiveContainer width="100%" height="100%">
+          <div className="w-full min-h-[350px] relative">
+            <ResponsiveContainer width="100%" height={350}>
               <BarChart data={chartData} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
                 <XAxis dataKey="metric" tick={{ fill: '#64748b', fontSize: 12 }} axisLine={{ stroke: '#cbd5e1' }} tickLine={false} />

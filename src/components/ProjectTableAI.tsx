@@ -10,61 +10,93 @@ import { Loader2 } from "lucide-react";
 export function ProjectTableAI({ projects }: { projects: any[] }) {
   const [aiScores, setAiScores] = useState<Record<string, any>>({});
   const [loading, setLoading] = useState(true);
+  const [hasFailed, setHasFailed] = useState(false);
   const [selectedProject, setSelectedProject] = useState<any | null>(null);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
 
-  useEffect(() => {
-    // Call the server action to fetch all projects and their AI scores
-    const fetchScores = async () => {
+  const fetchScores = async () => {
+    setLoading(true);
+    setHasFailed(false);
+    const maxRetries = 3;
+    
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
         const scores = await getAIHealthScores();
-        setAiScores(scores);
+        if (scores && Object.keys(scores).length > 0) {
+          setAiScores(scores);
+          setLoading(false);
+          return;
+        }
+        // Empty scores means backend was unreachable — retry
+        if (attempt < maxRetries) {
+          await new Promise(r => setTimeout(r, 2000));
+        }
       } catch (error) {
-        console.error("Failed to load AI scores:", error);
-      } finally {
-        setLoading(false);
+        console.error(`AI scores fetch attempt ${attempt} failed:`, error);
+        if (attempt < maxRetries) {
+          await new Promise(r => setTimeout(r, 2000));
+        }
       }
-    };
-    
+    }
+    // All retries exhausted
+    setHasFailed(true);
+    setLoading(false);
+  };
+
+  useEffect(() => {
     fetchScores();
   }, []);
 
   const getHealthBadge = (health: string) => {
-    if (!health) return <Badge variant="outline" className="border-zinc-700 text-zinc-500 rounded-none"><Loader2 className="h-3 w-3 animate-spin mr-1" /> Analyzing</Badge>;
+    if (!health) return <Badge variant="outline" className="border-slate-300 text-slate-500 rounded-none">N/A</Badge>;
     
-    switch (health) {
-      case "Critical":
+    switch (health.toLowerCase()) {
+      case "critical":
         return <Badge className="bg-red-950 text-red-500 border border-red-900 rounded-none">CRITICAL</Badge>;
-      case "At Risk":
-        return <Badge className="bg-amber-950 text-amber-500 border border-amber-900 rounded-none">AMBER</Badge>;
-      case "On Track":
-        return <Badge className="bg-emerald-950 text-emerald-500 border border-emerald-900 rounded-none">GREEN</Badge>;
+      case "high":
+        return <Badge className="bg-orange-950 text-orange-500 border border-orange-900 rounded-none">HIGH</Badge>;
+      case "at risk":
+      case "medium":
+        return <Badge className="bg-amber-950 text-amber-500 border border-amber-900 rounded-none">MEDIUM</Badge>;
+      case "on track":
+      case "low":
+        return <Badge className="bg-emerald-950 text-emerald-500 border border-emerald-500 rounded-none">LOW</Badge>;
       default:
-        return <Badge className="bg-zinc-800 text-zinc-300 rounded-none">{health}</Badge>;
+        return <Badge className="bg-slate-200 text-slate-700 rounded-none uppercase">{health}</Badge>;
     }
   };
 
   return (
     <div className="relative">
       {loading && (
-        <div className="absolute inset-0 bg-zinc-950/50 backdrop-blur-sm z-10 flex items-center justify-center border-t border-zinc-800">
+        <div className="absolute inset-0 bg-slate-50/50 backdrop-blur-sm z-10 flex items-center justify-center border-t border-slate-200">
            <div className="flex flex-col items-center gap-2">
              <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
-             <p className="text-sm font-mono text-blue-400">AI Engine evaluating 1,981 projects...</p>
+             <p className="text-sm font-mono text-blue-400">AI Engine evaluating {projects.length.toLocaleString()} projects...</p>
+           </div>
+        </div>
+      )}
+      {hasFailed && !loading && (
+        <div className="absolute inset-0 bg-slate-50/80 backdrop-blur-sm z-10 flex items-center justify-center border-t border-slate-200">
+           <div className="flex flex-col items-center gap-3">
+             <p className="text-sm font-mono text-red-400">AI Backend unavailable. Ensure backend API is correctly deployed and reachable.</p>
+             <button onClick={fetchScores} className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-mono rounded transition-colors">
+               Retry
+             </button>
            </div>
         </div>
       )}
       <Table>
-        <TableHeader className="bg-zinc-950">
-          <TableRow className="border-zinc-800 hover:bg-zinc-950/50">
-            <TableHead className="text-zinc-400 font-mono py-4">Code</TableHead>
-            <TableHead className="text-zinc-400 font-mono py-4">Project Name</TableHead>
-            <TableHead className="text-zinc-400 font-mono py-4">Sector</TableHead>
-            <TableHead className="text-zinc-400 font-mono text-right py-4">Orig. Cost</TableHead>
-            <TableHead className="text-zinc-400 font-mono text-right py-4">Rev. Cost</TableHead>
-            <TableHead className="text-zinc-400 font-mono text-right py-4">Overrun %</TableHead>
-            <TableHead className="text-zinc-400 font-mono text-right py-4">Discrepancy</TableHead>
-            <TableHead className="text-zinc-400 font-mono text-right py-4">AI Health Score</TableHead>
+        <TableHeader className="bg-slate-50">
+          <TableRow className="border-slate-200 hover:bg-slate-50/50">
+            <TableHead className="text-slate-600 font-mono py-4">Code</TableHead>
+            <TableHead className="text-slate-600 font-mono py-4">Project Name</TableHead>
+            <TableHead className="text-slate-600 font-mono py-4">Sector</TableHead>
+            <TableHead className="text-slate-600 font-mono text-right py-4">Orig. Cost</TableHead>
+            <TableHead className="text-slate-600 font-mono text-right py-4">Rev. Cost</TableHead>
+            <TableHead className="text-slate-600 font-mono text-right py-4">Overrun %</TableHead>
+            <TableHead className="text-slate-600 font-mono text-right py-4">Discrepancy</TableHead>
+            <TableHead className="text-slate-600 font-mono text-right py-4">AI Health Score</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -74,26 +106,26 @@ export function ProjectTableAI({ projects }: { projects: any[] }) {
             return (
               <TableRow 
                 key={p.id} 
-                className="border-zinc-800 hover:bg-zinc-800/50 transition-colors cursor-pointer"
+                className="border-slate-200 hover:bg-slate-200/50 transition-colors cursor-pointer"
                 onClick={() => {
                   setSelectedProject(p);
                   setIsSheetOpen(true);
                 }}
               >
-                <TableCell className="font-mono text-xs text-zinc-300">{p.project_code}</TableCell>
-                <TableCell className="font-medium max-w-[250px] truncate text-zinc-100" title={p.project_name}>{p.project_name}</TableCell>
+                <TableCell className="font-mono text-xs text-slate-700">{p.project_code}</TableCell>
+                <TableCell className="font-medium max-w-[250px] truncate text-slate-900" title={p.project_name}>{p.project_name}</TableCell>
                 <TableCell>
-                  <Badge variant="outline" className="border-zinc-700 text-zinc-300 font-mono rounded-none bg-zinc-800/50">{p.sector}</Badge>
+                  <Badge variant="outline" className="border-slate-300 text-slate-700 font-mono rounded-none bg-slate-200/50">{p.sector}</Badge>
                 </TableCell>
-                <TableCell className="text-right font-mono text-zinc-300">{p.original_cost?.toFixed(2) || '-'}</TableCell>
+                <TableCell className="text-right font-mono text-slate-700">{p.original_cost?.toFixed(2) || '-'}</TableCell>
                 <TableCell className="text-right font-mono text-amber-500">{p.revised_cost?.toFixed(2) || '-'}</TableCell>
                 <TableCell className="text-right font-mono">
-                  <span className={p.costOverrunPercent > 0 ? "text-red-500" : "text-zinc-400"}>
+                  <span className={p.costOverrunPercent > 0 ? "text-red-500" : "text-slate-600"}>
                     {p.costOverrunPercent > 0 ? '+' : ''}{p.costOverrunPercent.toFixed(1)}%
                   </span>
                 </TableCell>
                 <TableCell className="text-right font-mono">
-                  <span className={Math.abs(p.implementationDiscrepancy) > 20 ? "text-red-500 font-bold" : "text-zinc-400"}>
+                  <span className={Math.abs(p.implementationDiscrepancy) > 20 ? "text-red-500 font-bold" : "text-slate-600"}>
                     {p.implementationDiscrepancy > 0 ? '+' : ''}{p.implementationDiscrepancy.toFixed(1)}%
                   </span>
                 </TableCell>
@@ -107,10 +139,10 @@ export function ProjectTableAI({ projects }: { projects: any[] }) {
       </Table>
 
       <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
-        <SheetContent className="bg-zinc-950 border-l-2 border-zinc-700 text-zinc-100 overflow-y-auto sm:max-w-md w-full font-sans">
-          <SheetHeader className="border-b border-zinc-800 pb-4 mb-4">
-            <SheetTitle className="text-xl font-bold uppercase tracking-wide text-zinc-100">Explainable AI Risk Report</SheetTitle>
-            <SheetDescription className="font-mono text-zinc-400 text-xs uppercase">
+        <SheetContent className="bg-slate-50 border-l-2 border-slate-300 text-slate-900 overflow-y-auto sm:max-w-md w-full font-sans">
+          <SheetHeader className="border-b border-slate-200 pb-4 mb-4">
+            <SheetTitle className="text-xl font-bold uppercase tracking-wide text-slate-900">Explainable AI Risk Report</SheetTitle>
+            <SheetDescription className="font-mono text-slate-600 text-xs uppercase">
               {selectedProject?.project_code} — AI Analysis
             </SheetDescription>
           </SheetHeader>
@@ -118,55 +150,53 @@ export function ProjectTableAI({ projects }: { projects: any[] }) {
           {selectedProject && aiScores[selectedProject.id] ? (
             <div className="space-y-6">
               <div className="space-y-2">
-                <h3 className="font-mono text-xs text-zinc-500 uppercase tracking-widest border-b border-zinc-800 pb-1">Overall Health</h3>
+                <h3 className="font-mono text-xs text-slate-500 uppercase tracking-widest border-b border-slate-200 pb-1">Overall Health</h3>
                 <div className="flex items-center space-x-2 pt-1">
                   {getHealthBadge(aiScores[selectedProject.id]?.overall_health)}
                 </div>
               </div>
 
               <div className="space-y-2">
-                <h3 className="font-mono text-xs text-zinc-500 uppercase tracking-widest border-b border-zinc-800 pb-1">AI Recommendation</h3>
-                <p className="text-sm bg-zinc-900 border border-zinc-800 p-3 font-medium text-zinc-300">
+                <h3 className="font-mono text-xs text-slate-500 uppercase tracking-widest border-b border-slate-200 pb-1">AI Recommendation</h3>
+                <p className="text-sm bg-white border border-slate-200 p-3 font-medium text-slate-700">
                   {aiScores[selectedProject.id]?.recommendation}
                 </p>
               </div>
 
               {aiScores[selectedProject.id]?.overall_health === 'Critical' && aiScores[selectedProject.id]?.SHAP_Explanation && aiScores[selectedProject.id]?.SHAP_Explanation.length > 0 && (
                 <div className="space-y-2">
-                  <h3 className="font-mono text-xs text-red-500 uppercase tracking-widest border-b border-zinc-800 pb-1">Critical Risk Factors (SHAP)</h3>
-                  <div className="bg-zinc-900 border border-zinc-800 p-0">
-                    <Table>
-                      <TableBody>
-                        {aiScores[selectedProject.id].SHAP_Explanation.map((explanation: string, i: number) => {
-                          const parts = explanation.split("->");
-                          return (
-                            <TableRow key={i} className="border-b border-zinc-800/50 hover:bg-zinc-800/20">
-                              <TableCell className="text-xs text-zinc-300 py-3">{parts[0]?.trim()}</TableCell>
-                              <TableCell className="text-xs font-mono text-red-400 py-3 text-right">
-                                {parts[1] ? `-> ${parts[1].trim()}` : ''}
-                              </TableCell>
-                            </TableRow>
-                          );
-                        })}
-                      </TableBody>
-                    </Table>
+                  <h3 className="font-mono text-xs text-red-500 uppercase tracking-widest border-b border-slate-200 pb-1">Critical Risk Factors (SHAP)</h3>
+                  <div className="flex flex-col gap-2 mt-2">
+                    {aiScores[selectedProject.id].SHAP_Explanation.map((explanation: string, i: number) => {
+                      const parts = explanation.split("->");
+                      return (
+                        <div key={i} className="flex items-center justify-between bg-white border border-slate-200 p-2 rounded">
+                          <span className="text-xs text-slate-700 pr-2">{parts[0]?.trim()}</span>
+                          {parts[1] && (
+                            <span className="text-[10px] font-mono text-red-400 bg-red-950/30 px-2 py-1 rounded">
+                              {parts[1].trim()}
+                            </span>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               )}
 
-              <div className="grid grid-cols-2 gap-4 pt-4 border-t border-zinc-800">
-                <div className="bg-zinc-900 p-3 border border-zinc-800">
-                  <p className="text-[10px] font-mono text-zinc-500 uppercase">Cost Overrun Score</p>
-                  <p className="text-2xl font-black text-zinc-100">{aiScores[selectedProject.id]?.cost_overrun_score}</p>
+              <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-200">
+                <div className="bg-white p-3 border border-slate-200">
+                  <p className="text-[10px] font-mono text-slate-500 uppercase">Cost Overrun Score</p>
+                  <p className="text-2xl font-black text-slate-900">{aiScores[selectedProject.id]?.cost_overrun_score}</p>
                 </div>
-                <div className="bg-zinc-900 p-3 border border-zinc-800">
-                  <p className="text-[10px] font-mono text-zinc-500 uppercase">Schedule Risk Score</p>
-                  <p className="text-2xl font-black text-zinc-100">{aiScores[selectedProject.id]?.schedule_risk_score}</p>
+                <div className="bg-white p-3 border border-slate-200">
+                  <p className="text-[10px] font-mono text-slate-500 uppercase">Schedule Risk Score</p>
+                  <p className="text-2xl font-black text-slate-900">{aiScores[selectedProject.id]?.schedule_risk_score}</p>
                 </div>
               </div>
             </div>
           ) : (
-            <div className="text-center py-10 font-mono text-zinc-500 text-sm">
+            <div className="text-center py-10 font-mono text-slate-500 text-sm">
               Loading AI Explanation...
             </div>
           )}

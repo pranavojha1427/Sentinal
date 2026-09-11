@@ -56,41 +56,41 @@ export function AlertsDataTable({ initialAlerts }: { initialAlerts: any[] }) {
         </Badge>
       );
     }
-    return <Badge className="bg-zinc-800 text-zinc-300 rounded-none">{severity}</Badge>;
+    return <Badge className="bg-slate-200 text-slate-700 rounded-none">{severity}</Badge>;
   };
 
   return (
     <>
-      <div className="border-2 border-zinc-800 bg-zinc-900 shadow-[4px_4px_0px_0px_rgba(255,255,255,0.1)]">
+      <div className="border-2 border-slate-200 bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,0.1)]">
         <Table>
-          <TableHeader className="bg-zinc-950 border-b-2 border-zinc-800">
+          <TableHeader className="bg-slate-50 border-b-2 border-slate-200">
             <TableRow className="hover:bg-transparent">
-              <TableHead className="text-zinc-400 font-mono py-4 uppercase">Project Code</TableHead>
-              <TableHead className="text-zinc-400 font-mono py-4 uppercase">Alert Type</TableHead>
-              <TableHead className="text-zinc-400 font-mono py-4 uppercase">Trigger Reason</TableHead>
-              <TableHead className="text-zinc-400 font-mono py-4 uppercase">Severity</TableHead>
-              <TableHead className="text-zinc-400 font-mono py-4 uppercase">Status</TableHead>
-              <TableHead className="text-right text-zinc-400 font-mono py-4 uppercase">Action</TableHead>
+              <TableHead className="text-slate-600 font-mono py-4 uppercase">Project Code</TableHead>
+              <TableHead className="text-slate-600 font-mono py-4 uppercase">Alert Type</TableHead>
+              <TableHead className="text-slate-600 font-mono py-4 uppercase">Trigger Reason</TableHead>
+              <TableHead className="text-slate-600 font-mono py-4 uppercase">Severity</TableHead>
+              <TableHead className="text-slate-600 font-mono py-4 uppercase">Status</TableHead>
+              <TableHead className="text-right text-slate-600 font-mono py-4 uppercase">Action</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {alerts.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center py-8 text-zinc-500 font-mono">
+                <TableCell colSpan={6} className="text-center py-8 text-slate-500 font-mono">
                   No active alerts found. System normal.
                 </TableCell>
               </TableRow>
             ) : (
               alerts.map((alert) => (
-                <TableRow key={alert.id} className="border-b border-zinc-800 hover:bg-zinc-800/50 transition-colors">
-                  <TableCell className="font-mono text-zinc-300 font-bold">{alert.project_code}</TableCell>
-                  <TableCell className="font-mono text-zinc-200 uppercase">{alert.alert_type}</TableCell>
-                  <TableCell className="text-sm text-zinc-400 max-w-md">{alert.trigger_reason}</TableCell>
+                <TableRow key={alert.id} className="border-b border-slate-200 hover:bg-slate-200/50 transition-colors">
+                  <TableCell className="font-mono text-slate-700 font-bold">{alert.project_code}</TableCell>
+                  <TableCell className="font-mono text-slate-800 uppercase">{alert.alert_type}</TableCell>
+                  <TableCell className="text-sm text-slate-600 max-w-md">{alert.trigger_reason}</TableCell>
                   <TableCell>{getSeverityBadge(alert.severity)}</TableCell>
                   <TableCell>
                     <span
                       className={`text-xs font-mono uppercase tracking-wider ${
-                        alert.status === "Assigned" ? "text-emerald-500" : "text-zinc-400"
+                        alert.status === "Assigned" ? "text-emerald-500" : "text-slate-600"
                       }`}
                     >
                       {alert.status || "Open"}
@@ -101,7 +101,7 @@ export function AlertsDataTable({ initialAlerts }: { initialAlerts: any[] }) {
                       variant="outline"
                       size="sm"
                       onClick={() => handleEscalate(alert)}
-                      className="bg-transparent border-zinc-700 text-zinc-300 hover:bg-zinc-100 hover:text-zinc-900 rounded-none font-mono uppercase tracking-tight"
+                      className="bg-transparent border-slate-300 text-slate-700 hover:bg-zinc-100 hover:text-zinc-900 rounded-none font-mono uppercase tracking-tight"
                     >
                       Escalate
                     </Button>
@@ -114,18 +114,18 @@ export function AlertsDataTable({ initialAlerts }: { initialAlerts: any[] }) {
       </div>
 
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="bg-zinc-950 border-2 border-zinc-800 text-zinc-100 shadow-[8px_8px_0px_0px_rgba(255,255,255,0.1)] rounded-none sm:max-w-[425px]">
+        <DialogContent className="bg-slate-50 border-2 border-slate-200 text-slate-900 shadow-[8px_8px_0px_0px_rgba(255,255,255,0.1)] rounded-none sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle className="font-mono uppercase text-xl border-b border-zinc-800 pb-2">
+            <DialogTitle className="font-mono uppercase text-xl border-b border-slate-200 pb-2">
               Escalate Action
             </DialogTitle>
-            <DialogDescription className="text-zinc-400 pt-2">
+            <DialogDescription className="text-slate-600 pt-2">
               Assign this alert to an officer or agency for immediate intervention.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="flex flex-col gap-2">
-              <label htmlFor="assignee" className="text-xs font-mono uppercase text-zinc-500">
+              <label htmlFor="assignee" className="text-xs font-mono uppercase text-slate-500">
                 Target Agency / Officer
               </label>
               <input
@@ -133,15 +133,15 @@ export function AlertsDataTable({ initialAlerts }: { initialAlerts: any[] }) {
                 value={assignee}
                 onChange={(e) => setAssignee(e.target.value)}
                 placeholder="e.g. NHAI Nodal Officer"
-                className="w-full bg-zinc-900 border border-zinc-700 px-3 py-2 text-zinc-100 font-mono text-sm focus:outline-none focus:border-zinc-500 rounded-none"
+                className="w-full bg-white border border-slate-300 px-3 py-2 text-slate-900 font-mono text-sm focus:outline-none focus:border-zinc-500 rounded-none"
               />
             </div>
             
             {selectedAlert && (
-              <div className="bg-zinc-900/50 p-3 border border-zinc-800 mt-2">
-                <div className="text-xs text-zinc-500 font-mono uppercase mb-1">Alert Details</div>
-                <div className="text-sm text-zinc-300 font-bold mb-1">{selectedAlert.project_code} - {selectedAlert.alert_type}</div>
-                <div className="text-xs text-zinc-400">{selectedAlert.trigger_reason}</div>
+              <div className="bg-white/50 p-3 border border-slate-200 mt-2">
+                <div className="text-xs text-slate-500 font-mono uppercase mb-1">Alert Details</div>
+                <div className="text-sm text-slate-700 font-bold mb-1">{selectedAlert.project_code} - {selectedAlert.alert_type}</div>
+                <div className="text-xs text-slate-600">{selectedAlert.trigger_reason}</div>
               </div>
             )}
           </div>
@@ -149,7 +149,7 @@ export function AlertsDataTable({ initialAlerts }: { initialAlerts: any[] }) {
             <Button
               variant="outline"
               onClick={() => setIsModalOpen(false)}
-              className="rounded-none border-zinc-700 text-zinc-400 hover:bg-zinc-800 hover:text-white"
+              className="rounded-none border-slate-300 text-slate-600 hover:bg-slate-200 hover:text-white"
             >
               Cancel
             </Button>
