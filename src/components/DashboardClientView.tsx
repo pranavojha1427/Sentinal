@@ -214,10 +214,13 @@ export function DashboardClientView({ allProjects, agencyData, benchResData, ale
           </h1>
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 w-full">
             <p className="text-slate-600 font-mono text-sm uppercase">Infrastructure Project Monitoring Platform</p>
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-3">
+              <a href="/pulse" className="text-xs font-mono uppercase bg-indigo-600 text-white px-4 py-2 hover:bg-indigo-700 transition-colors font-bold shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] border border-black whitespace-nowrap">Add Complaint</a>
+              <a href="/pulse" className="text-xs font-mono uppercase bg-amber-500 text-black px-4 py-2 hover:bg-amber-600 transition-colors font-bold shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] border border-black whitespace-nowrap">Add Feedback</a>
+              
               {currentUser ? (
                 <>
-                  <span className="text-xs font-mono uppercase bg-slate-200 px-3 py-2">
+                  <span className="text-xs font-mono uppercase bg-slate-200 px-3 py-2 hidden md:inline-block">
                     {currentUser.name} - {currentUser.role}
                     {currentUser.ministry ? ' - ' + currentUser.ministry : ""}
                     {currentUser.agency ? ' - ' + currentUser.agency : ""}
