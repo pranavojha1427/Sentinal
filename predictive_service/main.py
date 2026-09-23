@@ -4,9 +4,12 @@ from pydantic import BaseModel, Field
 
 app = FastAPI(
     title="PragatiPulse Predictive Microservice",
-    description="Predictive API for MoSPI platform to evaluate project health.",
+    description="Predictive API for MoSPI platform to evaluate project health and participatory demand.",
     version="1.0.0"
 )
+
+from routes import citizen
+app.include_router(citizen.router)
 
 # Allow CORS for Next.js frontend
 app.add_middleware(

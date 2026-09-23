@@ -1,0 +1,107 @@
+612140: Transmission Scheme for Integration of Renewable Energy Zone [Phase II] in Koppal II [Phase A&B] and Gadag II[Phase A] in Karnataka [POWERGRID KOPPAL GADAG TRANSMISSION LIMITED]
+State: Karnataka
+Original Cost / Revised: ₹4,445 Cr / ₹4,445 Cr
+Expenditure: ₹3,733.80 Cr
+Physical Progress: 86%
+
+617333: Surface triangle line bet. Bhadura stn and new crossing stn Karma [East Central Railway (ECR) -1]
+State: Uttar Pradesh
+Original Cost / Revised: ₹199.96 Cr / ₹199.96 Cr
+Expenditure: ₹5.19 Cr
+Physical Progress: 0.5%
+
+618037: Rehabilitation and Up-gradation of existing road from 2-lane to 2-lane with paved shoulders from km 0.00 to km 53.590 of Raychoti to Vempalli section of NH-440 on EPC mode [MoRTH]
+State: Andhra Pradesh
+Original Cost / Revised: ₹439.82 Cr / ₹359.52 Cr
+Expenditure: ₹178.83 Cr
+Physical Progress: 82%
+
+701598: Provision of 4G based Mobile Services in Uncovered Villages and National Highways of Meghalaya [Department of Telecommunications]
+State: Meghalaya
+Original Cost / Revised: ₹971.96 Cr / ₹971.96 Cr
+Expenditure: ₹232.79 Cr
+Physical Progress: 99.84%
+
+701766: Green Building Development Project [Ministry of Housing & Urban Affairs]
+State: Uttarakhand
+Original Cost / Revised: ₹150.97 Cr / ₹206 Cr
+Expenditure: ₹54.01 Cr
+Physical Progress: 40%
+
+702629: Agra Metro Rail Project [Uttar Pradesh Metro Rail Corporation (UPMRC)]
+State: Uttar Pradesh
+Original Cost / Revised: ₹8,379.62 Cr / ₹8,379.62 Cr
+Expenditure: ₹6,071.78 Cr
+Physical Progress: 69.5%
+
+702958: Lucknow Sewerage Management Infrastructure Project [Ministry of Housing & Urban Affairs]
+State: Uttar Pradesh
+Original Cost / Revised: ₹142.46 Cr / ₹173.21 Cr
+Expenditure: ₹152.65 Cr
+Physical Progress: 95%
+
+705237: Western Dedicated Freight Corridor [DFCCIL]
+State: Multi-States (Gujarat, Haryana, Maharashtra, Rajasthan, Uttar Pradesh)
+Original Cost / Revised: ₹51,101 Cr / ₹1,24,005 Cr
+Expenditure: ₹1,24,623 Cr
+Physical Progress: 96%
+
+705728: MUMBAI-AHMEDABAD HIGH SPEED RAIL PROJECT-508 KM [National High Speed Rail Corporation (NHSRC)]
+State: N/A
+Original Cost / Revised: ₹108,000 Cr / ₹108,000 Cr
+Expenditure: ₹90,502 Cr
+Physical Progress: 59.86%
+
+705794: New Delhi- Howrah Speed Booster [160Kmph] Project [PCE/NCR]
+State: Multi-States (Bihar, Delhi, Jharkhand, Uttar Pradesh, West Bengal)
+Original Cost / Revised: ₹6,684.81 Cr / ₹6,684.81 Cr
+Expenditure: ₹127.03 Cr
+Physical Progress: 0%
+
+706777: Baranagar-Barrackpore and Dakshineshwar - Construction of Metro Railway [RVNL-II]
+State: West Bengal
+Original Cost / Revised: ₹2,298 Cr / ₹2,734 Cr
+Expenditure: ₹393.02 Cr
+Physical Progress: 17%
+
+707087: Establishment of new GMC Pithoragarh [Medical Education, Ministry of Health and Family Welfare]
+State: Uttarakhand
+Original Cost / Revised: ₹325 Cr / ₹768.89 Cr
+Expenditure: ₹325.08 Cr
+Physical Progress: 84%
+
+707215: National Maritime Heritage Complex [NMHC] Phase-I [Indian Port Rail & Ropeway Corporation Ltd. (IPRCL)]
+State: Gujarat
+Original Cost / Revised: ₹573 Cr / ₹1,238.05 Cr
+Expenditure: ₹614.91 Cr
+Physical Progress: 76.12%
+
+707410: Integrated Multi Modal Logistics Hub at Nangal Chaudhary in Haryana - Other Trunk Infrastructure Development Phase 1 [NHIDCL]
+State: Haryana
+Original Cost / Revised: ₹763 Cr / ₹763 Cr
+Expenditure: ₹430 Cr
+Physical Progress: 60%
+
+707419: IMC at Prayagraj [National Industrial Corridor Development Corporation]
+State: Uttar Pradesh
+Original Cost / Revised: ₹658 Cr / ₹658 Cr
+Expenditure: ₹0 Cr
+Physical Progress: 6.5%
+
+709791: City Gas Distribution Projects at Alipurduar and Cooch Behar [Bharat Petroleum Corporation Limited (BPCL)]
+State: West Bengal
+Original Cost / Revised: ₹1,017 Cr / ₹1,017 Cr
+Expenditure: ₹227.8 Cr
+Physical Progress: 43.6%
+
+709832: 25.5 MW WIND POWER PROJECT AT KAYATHAR IN TAMILNADU [National Aluminium Company Limited (NALCO)]
+State: Tamil Nadu
+Original Cost / Revised: ₹166 Cr / ₹166 Cr
+Expenditure: ₹135 Cr
+Physical Progress: 66.73%
+
+709857: PLANNING ENGINEERING, SUPPLY, INSTALLATION, TESTING, COMMISSIONING, INTEGRATION & ANNUAL MAINTENANCE OF 4G MOBILE NETWORK AT 1 LAKH SITES ON PAN INDIA BASIS INCLUDING MUMBAI & DELHI LSA ON TURNKEY BASIS UNDER PHASE IX.2 PROJECT
+State: Multi-State
+Original Cost / Revised: ₹24,545 Cr / ₹24,545 Cr
+Expenditure: ₹8,472 Cr
+Physical Progress: 98.23%

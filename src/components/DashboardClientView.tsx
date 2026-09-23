@@ -1,11 +1,18 @@
 "use client";
 
-import { useState, useMemo, Suspense } from "react";
+import { useState, useMemo, useEffect, Suspense } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { SectorDistributionChart, CostOverviewChart, PhysicalProgressChart } from "@/components/ExtraCharts";
 import { ProjectTableAI } from "@/components/ProjectTableAI";
 import StateRiskMap from "@/components/StateRiskMap";
 import { AnalyticsTabs } from "@/components/AnalyticsTabs";
+import { AdminAccountManager } from "@/components/AdminAccountManager";
+import { AgencyProjectManager } from "@/components/AgencyProjectManager";
+import { WorkflowInbox } from "@/components/WorkflowInbox";
+import { ProposalForm } from "@/components/ProposalForm";
+import { NotificationBell } from "@/components/NotificationBell";
+import { SessionUser } from "@/lib/auth";
+
 
 const sectors = [
   "Roads & Highways", "Railways", "Coal", "Oil & Gas",
@@ -16,6 +23,8 @@ const sectors = [
 
 const TAB_ITEMS = [
   { id: "dashboard", label: "Dashboard" },
+  { id: "proposals", label: "Bidding / Project Addition" },
+  { id: "my-projects", label: "My Projects" },
   { id: "agency", label: "Agency Leaderboard" },
   { id: "benchmarks", label: "Benchmarks" },
   { id: "risk", label: "Risk Prediction" },
@@ -28,6 +37,7 @@ type Props = {
   benchResData: any[];
   alertsData: any[];
   kpi: any;
+  currentUser?: SessionUser;
 };
 
 const ALL_MINISTRIES = [
@@ -52,11 +62,20 @@ const ALL_MINISTRIES = [
   "Ministry of Steel"
 ];
 
-export function DashboardClientView({ allProjects, agencyData, benchResData, alertsData, kpi }: Props) {
+export function DashboardClientView({ allProjects, agencyData, benchResData, alertsData, kpi, currentUser }: Props) {
   const [stateFilter, setStateFilter] = useState<string | null>(null);
   const [sectorFilter, setSectorFilter] = useState<string | null>(null);
   const [ministryFilter, setMinistryFilter] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<string>("dashboard");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 300);
+    return () => clearTimeout(handler);
+  }, [searchQuery]);
 
   const getMinistry = (sector: string, agency: string, project_name: string, cost: number, assignedMinistry: string | null) => {
     // All projects are pre-aligned in the database to match the official
@@ -98,7 +117,7 @@ export function DashboardClientView({ allProjects, agencyData, benchResData, ale
   }, [projectsWithMinistry, stateFilter, sectorFilter, ministryFilter]);
 
   // KPIs bypass if no filters are active to use precomputed values
-  const isFiltered = stateFilter || sectorFilter || ministryFilter;
+  const isFiltered = stateFilter || sectorFilter || ministryFilter || (currentUser && currentUser.role !== "admin" && currentUser.role !== "user");
   const summary = useMemo(() => {
     return {
       totalProjects: !isFiltered && kpi ? Number(kpi.project_count) : filteredProjects.length,
@@ -148,6 +167,15 @@ export function DashboardClientView({ allProjects, agencyData, benchResData, ale
     };
   }, [filteredProjects]);
 
+  const searchedProjects = useMemo(() => {
+    if (!debouncedSearchQuery) return mappedProjects;
+    const q = debouncedSearchQuery.toLowerCase();
+    return mappedProjects.filter(p => 
+      (p.project_name && p.project_name.toLowerCase().includes(q)) || 
+      (p.project_code && p.project_code.toLowerCase().includes(q))
+    );
+  }, [mappedProjects, debouncedSearchQuery]);
+
   const benchmarkProjects = useMemo(() => {
     return allProjects.map((p) => {
       let sector = "Others";
@@ -171,16 +199,35 @@ export function DashboardClientView({ allProjects, agencyData, benchResData, ale
   return (
     <div className="p-8 bg-slate-50 min-h-screen text-slate-900 font-sans">
       {/* Header */}
-      <div className="flex flex-col gap-2 mb-2">
-        <h1 className="text-4xl font-bold tracking-tighter uppercase border-b-4 border-slate-300 pb-2 text-slate-900">
-          PragatiPulse
-        </h1>
-        <p className="text-slate-600 font-mono text-sm uppercase">Infrastructure Project Monitoring Platform</p>
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
+        <div className="flex flex-col gap-2 w-full">
+          <h1 className="text-4xl font-bold tracking-tighter uppercase border-b-4 border-slate-300 pb-2 text-slate-900">
+            PragatiPulse
+          </h1>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 w-full">
+            <p className="text-slate-600 font-mono text-sm uppercase">Infrastructure Project Monitoring Platform</p>
+            <div className="flex items-center gap-3">
+              {currentUser ? (
+                <>
+                  <span className="text-xs font-mono uppercase bg-slate-200 px-3 py-2">
+                    {currentUser.name} - {currentUser.role}
+                    {currentUser.ministry ? ' - ' + currentUser.ministry : ""}
+                    {currentUser.agency ? ' - ' + currentUser.agency : ""}
+                  </span>
+                  <NotificationBell />
+                  <a href="/logout" className="text-xs font-mono uppercase bg-slate-900 text-white px-3 py-2 hover:bg-slate-800 transition-colors">Logout</a>
+                </>
+              ) : (
+                <a href="/login" className="text-xs font-mono uppercase bg-emerald-600 text-white px-6 py-2 hover:bg-emerald-700 transition-colors font-bold shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] border border-black">Login</a>
+              )}
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* ── Tab Navigation ── */}
+      {/* Tab Navigation */}
       <div className="flex gap-1 border-b border-slate-200 mb-8 overflow-x-auto">
-        {TAB_ITEMS.map((tab) => (
+        {currentUser && TAB_ITEMS.filter(tab => (tab.id !== "my-projects" || currentUser?.role === "agency") && (tab.id !== "agency" || currentUser?.role !== "agency")).concat(currentUser?.role === "admin" ? [{ id: "accounts", label: "Accounts" }] : []).map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
@@ -212,7 +259,8 @@ export function DashboardClientView({ allProjects, agencyData, benchResData, ale
                 {uniqueSectors.map(s => <option key={s} value={s}>{s}</option>)}
               </select>
             </div>
-            <div className="flex flex-col gap-1 w-full md:w-auto flex-1 min-w-[200px]">
+            {currentUser?.role !== "ministry" && (
+  <div className="flex flex-col gap-1 w-full md:w-auto flex-1 min-w-[200px]">
               <label className="text-[10px] font-mono text-slate-500 uppercase tracking-widest">Ministry / Department</label>
               <select 
                 className="bg-slate-50 border border-slate-300 text-slate-700 p-2 text-sm font-mono focus:border-emerald-500 outline-none"
@@ -223,6 +271,7 @@ export function DashboardClientView({ allProjects, agencyData, benchResData, ale
                 {uniqueMinistries.map(m => <option key={m} value={m}>{m}</option>)}
               </select>
             </div>
+)}
             {(sectorFilter || ministryFilter) && (
               <div className="flex items-end">
                 <button 
@@ -288,13 +337,36 @@ export function DashboardClientView({ allProjects, agencyData, benchResData, ale
           </div>
 
           <Card className="bg-white border-slate-200 rounded-none border-2 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.1)] overflow-hidden">
-            <CardHeader><CardTitle className="font-mono uppercase tracking-wide border-b border-slate-200 pb-2 text-slate-900">Project Database</CardTitle></CardHeader>
-            <CardContent className="p-0"><ProjectTableAI projects={mappedProjects} /></CardContent>
+            <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-4">
+                <CardTitle className="font-mono uppercase tracking-wide text-slate-900">Project Database</CardTitle>
+                <div className="relative w-full sm:w-72">
+                  <input
+                    type="text"
+                    placeholder="Search name or code..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full bg-slate-50 border border-slate-300 text-slate-700 px-3 py-2 text-sm font-mono focus:border-emerald-500 outline-none"
+                  />
+                </div>
+              </CardHeader>
+              <CardContent className="p-0"><ProjectTableAI projects={searchedProjects} /></CardContent>
           </Card>
         </div>
       )}
 
-      {activeTab !== "dashboard" && (
+      {activeTab === "proposals" && (
+        <div className="space-y-8 p-6">
+          <WorkflowInbox currentUser={currentUser as any} />
+          {(currentUser?.role === "agency" || currentUser?.role === "ministry") && (
+            <ProposalForm currentUser={currentUser as any} onSuccess={() => window.location.reload()} />
+          )}
+        </div>
+      )}
+      {activeTab === "accounts" && currentUser?.role === "admin" ? (
+        <AdminAccountManager />
+      ) : activeTab === "my-projects" && currentUser?.role === "agency" ? (
+        <AgencyProjectManager projects={allProjects.filter((p: any) => p.agency === currentUser?.agency && !p.is_completed)} agency={currentUser?.agency!} />
+      ) : activeTab !== "dashboard" && activeTab !== "proposals" && (
         <AnalyticsTabs
           activeTab={activeTab}
           agencyData={agencyData}

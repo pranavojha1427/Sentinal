@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/utils/supabase/server";
+import { getMongoProjects } from "@/lib/project-store";
 
 export async function getAIHealthScores() {
   const supabase = await createClient();
@@ -29,7 +30,13 @@ export async function getAIHealthScores() {
     }
   }
 
-  const scores: Record<number, any> = {};
+    // Append MongoDB projects so custom proposals also get AI Health Scores
+  const mongoProjects = await getMongoProjects().catch(e => { console.error("Mongo Error in actions:", e); return []; });
+  if (mongoProjects && mongoProjects.length > 0) {
+    projects = [...projects, ...mongoProjects.map(p => ({ ...p, id: p._id.toString() }))];
+  }
+
+  const scores: Record<string, any> = {};
 
   projects.forEach((data) => {
       const original_cost = Number(data.original_cost) || 0;
@@ -54,14 +61,14 @@ export async function getAIHealthScores() {
       const schedule_risk_score = Math.max(0.0, Math.min(100.0, (100.0 - physical_progress) + Math.max(0.0, -implementation_discrepancy)));
 
       let overall_health = "On Track";
-      let recommendation = "Continue monitoring.";
+      let recommendation = "Maintain current monitoring protocols. Project execution velocity remains well-aligned with financial deployments, reflecting strong governance. Continue regular milestone tracking and ensure risk mitigation contingency funds remain available to sustain this operational momentum.";
 
       if (cost_overrun_percent > 10.0 && physical_progress < 50.0) {
           overall_health = "Critical";
-          recommendation = "Trigger financial scrutiny";
+          recommendation = "Trigger immediate financial scrutiny and halt further disbursements. Given the cost overrun exceeding 10% coupled with a physical progress below 50%, an exhaustive forensic audit is highly recommended to identify fund leakages and restructure timelines.";
       } else if (cost_overrun_score > 30.0 || schedule_risk_score > 50.0) {
           overall_health = "At Risk";
-          recommendation = "Review project execution plan and address delays.";
+          recommendation = "Conduct a thorough review of the project execution plan immediately. With schedule and cost risk scores climbing, it is vital to mandate contractor performance metrics, expedite pending clearances, and streamline supply chains to prevent further delays.";
       }
 
       const shap_explanations: string[] = [];

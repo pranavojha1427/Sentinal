@@ -5,7 +5,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { getAIHealthScores } from "@/app/actions";
-import { Loader2 } from "lucide-react";
+import { Loader2, Sparkles } from "lucide-react";
 
 export function ProjectTableAI({ projects }: { projects: any[] }) {
   const [aiScores, setAiScores] = useState<Record<string, any>>({});
@@ -52,15 +52,15 @@ export function ProjectTableAI({ projects }: { projects: any[] }) {
     
     switch (health.toLowerCase()) {
       case "critical":
-        return <Badge className="bg-red-950 text-red-500 border border-red-900 rounded-none">CRITICAL</Badge>;
+        return <Badge className="bg-red-200 text-red-900 border border-red-300 rounded-none">CRITICAL</Badge>;
       case "high":
-        return <Badge className="bg-orange-950 text-orange-500 border border-orange-900 rounded-none">HIGH</Badge>;
+        return <Badge className="bg-orange-100 text-orange-800 border border-orange-200 rounded-none">HIGH</Badge>;
       case "at risk":
       case "medium":
-        return <Badge className="bg-amber-950 text-amber-500 border border-amber-900 rounded-none">MEDIUM</Badge>;
+        return <Badge className="bg-amber-100 text-amber-800 border border-amber-200 rounded-none">MEDIUM</Badge>;
       case "on track":
       case "low":
-        return <Badge className="bg-emerald-950 text-emerald-500 border border-emerald-500 rounded-none">LOW</Badge>;
+        return <Badge className="bg-emerald-100 text-emerald-800 border border-emerald-200 rounded-none">LOW</Badge>;
       default:
         return <Badge className="bg-slate-200 text-slate-700 rounded-none uppercase">{health}</Badge>;
     }
@@ -150,17 +150,20 @@ export function ProjectTableAI({ projects }: { projects: any[] }) {
           {selectedProject && aiScores[selectedProject.id] ? (
             <div className="space-y-6">
               <div className="space-y-2">
-                <h3 className="font-mono text-xs text-slate-500 uppercase tracking-widest border-b border-slate-200 pb-1">Overall Health</h3>
-                <div className="flex items-center space-x-2 pt-1">
+                <h3 className="font-mono text-xs text-slate-500 uppercase tracking-widest border-b border-slate-200 pb-1 text-center">Overall Health</h3>
+                <div className="flex items-center justify-center pt-1">
                   {getHealthBadge(aiScores[selectedProject.id]?.overall_health)}
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <h3 className="font-mono text-xs text-slate-500 uppercase tracking-widest border-b border-slate-200 pb-1">AI Recommendation</h3>
-                <p className="text-sm bg-white border border-slate-200 p-3 font-medium text-slate-700">
+              <div className="space-y-2 mt-4">
+                <h3 className="font-mono text-xs text-slate-500 uppercase tracking-widest border-b border-slate-200 pb-1 text-center">
+                  AI Recommendation
+                </h3>
+                <div className="text-sm bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 p-4 rounded-md shadow-sm font-medium text-slate-800 leading-relaxed relative overflow-hidden text-center">
+                  <div className="absolute top-0 left-0 w-1 h-full bg-blue-500"></div>
                   {aiScores[selectedProject.id]?.recommendation}
-                </p>
+                </div>
               </div>
 
               {aiScores[selectedProject.id]?.overall_health === 'Critical' && aiScores[selectedProject.id]?.SHAP_Explanation && aiScores[selectedProject.id]?.SHAP_Explanation.length > 0 && (

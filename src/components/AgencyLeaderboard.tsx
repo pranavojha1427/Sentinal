@@ -1,65 +1,52 @@
-import { createClient } from "@/utils/supabase/server";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 
-export async function AgencyLeaderboard() {
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("agency_performance_rankings")
-    .select("*")
-    .order("delay_frequency_pct", { ascending: false });
+"use client";
+import { useState, useMemo } from "react";
 
-  if (error) {
-    console.error("Error fetching agency rankings:", error);
-    return <div>Error loading agency leaderboard.</div>;
-  }
+export function AgencyLeaderboard({ agencyData, projects }: any) {
+  const [ministry, setMinistry] = useState("");
+
+  const allMinistries = useMemo(() => {
+    return Array.from(new Set(projects.map((p: any) => p.ministry).filter(Boolean))).sort();
+  }, [projects]);
+
+  const filteredData = useMemo(() => {
+    if (!ministry) return agencyData.slice(0, 15);
+    
+    // Find agencies that belong to this ministry
+    const validAgencies = new Set(projects.filter((p: any) => p.ministry === ministry).map((p: any) => p.agency));
+    return agencyData.filter((a: any) => validAgencies.has(a.agency)).slice(0, 15);
+  }, [agencyData, projects, ministry]);
 
   return (
-    <Card className="bg-white border-slate-200 rounded-none border-2 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.1)] overflow-hidden">
-      <CardHeader>
-        <CardTitle className="font-mono uppercase tracking-wide border-b border-slate-200 pb-2">Agency Performance Leaderboard</CardTitle>
-      </CardHeader>
-      <CardContent className="p-0">
-        <Table>
-          <TableHeader>
-            <TableRow className="border-slate-200 hover:bg-slate-200/50">
-              <TableHead className="font-mono text-slate-600">Agency</TableHead>
-              <TableHead className="font-mono text-slate-600 text-right">Total Projects</TableHead>
-              <TableHead className="font-mono text-slate-600 text-right">Delayed Count</TableHead>
-              <TableHead className="font-mono text-slate-600 text-right">Delay Frequency (%)</TableHead>
-              <TableHead className="font-mono text-slate-600 text-right">Avg Cost Overrun (%)</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {data?.map((agency, index) => {
-              const isHighDelay = agency.delay_frequency_pct > 40;
-              return (
-                <TableRow 
-                  key={index} 
-                  className={`border-slate-200 ${isHighDelay ? 'bg-red-50 hover:bg-red-100' : 'hover:bg-slate-100'}`}
-                >
-                  <TableCell className="font-medium text-slate-800">
-                    {agency.agency}
-                    {isHighDelay && <Badge variant="destructive" className="ml-2 text-[10px] uppercase">Warning</Badge>}
-                  </TableCell>
-                  <TableCell className="text-right text-slate-700">{agency.total_projects}</TableCell>
-                  <TableCell className="text-right text-slate-700">{agency.delayed_project_count}</TableCell>
-                  <TableCell className={`text-right ${isHighDelay ? 'text-red-600 font-bold' : 'text-slate-700'}`}>
-                    {agency.delay_frequency_pct}%
-                  </TableCell>
-                  <TableCell className="text-right text-slate-700">{agency.avg_cost_overrun_pct}%</TableCell>
-                </TableRow>
-              );
-            })}
-            {data?.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={5} className="text-center text-slate-500 py-4">No data available</TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </CardContent>
-    </Card>
+    <div className="bg-white p-4 border rounded shadow-sm">
+      <div className="flex justify-between items-center mb-4 border-b pb-2">
+        <h3 className="font-bold text-slate-800">Top Performing Agencies</h3>
+        <select value={ministry} onChange={e => setMinistry(e.target.value)} className="border text-xs p-1 rounded bg-slate-50 max-w-[200px]">
+          <option value="">All Ministries (Global)</option>
+          {allMinistries.map((m: any) => <option key={m} value={m}>{m}</option>)}
+        </select>
+      </div>
+      
+      <div className="space-y-3">
+        {filteredData.length === 0 ? <div className="text-xs text-slate-500">No agencies found.</div> : 
+          filteredData.map((a: any, i: number) => (
+          <div key={i} className="flex justify-between items-center bg-slate-50 p-2 rounded border border-slate-100">
+            <div className="flex items-center gap-3">
+              <span className={`w-6 h-6 flex items-center justify-center rounded-full text-xs font-bold ${i === 0 ? 'bg-amber-100 text-amber-700' : 'bg-slate-200 text-slate-600'}`}>
+                {i + 1}
+              </span>
+              <div>
+                <p className="text-xs font-semibold text-slate-800 line-clamp-1" title={a.agency}>{a.agency}</p>
+                <p className="text-[10px] text-slate-500">Avg Cost Overrun: {a.avg_cost_overrun_pct}%</p>
+              </div>
+            </div>
+            <div className="text-right">
+              <p className="text-xs font-bold text-slate-700">{a.delay_frequency_pct}%</p>
+              <p className="text-[10px] text-slate-500">Delay Freq</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }

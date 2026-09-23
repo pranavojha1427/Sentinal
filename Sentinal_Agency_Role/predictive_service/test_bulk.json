@@ -1,0 +1,26 @@
+[
+  {
+    "project_id": 1,
+    "original_cost": 265.91,
+    "sector": "Others",
+    "agency": "AAI",
+    "state": "Andhra Pradesh",
+    "burn_rate_6m": 12.9,
+    "phys_burn_rate_6m": 6.5,
+    "land_acquisition_issue": 0,
+    "forest_clearance_issue": 0,
+    "contractor_delay": 0
+  },
+  {
+    "project_id": 2,
+    "original_cost": 1712.0,
+    "sector": "Others",
+    "agency": "AAHL",
+    "state": "Assam",
+    "burn_rate_6m": 262.7,
+    "phys_burn_rate_6m": 9.8,
+    "land_acquisition_issue": 1,
+    "forest_clearance_issue": 0,
+    "contractor_delay": 1
+  }
+]

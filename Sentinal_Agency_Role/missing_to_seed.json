@@ -1,0 +1,1198 @@
+[
+  {
+    "project_code": "612791",
+    "project_name": [
+      "(Airport",
+      "Authority",
+      "of",
+      "India",
+      "[AAI])",
+      "(N04000109)",
+      "(-)",
+      "Total",
+      "(26)",
+      "Ministry",
+      "of",
+      "Coal",
+      "Coal",
+      "TIKAK",
+      "EXTENSION",
+      "OCP",
+      "(MIS",
+      "MoCoal",
+      "Integration",
+      "Logins)"
+    ],
+    "state": [
+      "West",
+      "Bengal"
+    ],
+    "cost": [
+      "(328.3)",
+      "21600.76",
+      "159.77"
+    ],
+    "cum_exp": [
+      "139.77",
+      "10762.01"
+    ],
+    "phys_prog": [
+      "64.5"
+    ],
+    "agency": "Unknown Agency"
+  },
+  {
+    "project_code": "616230",
+    "project_name": [
+      "(N06000281)",
+      "(6881)",
+      "Total",
+      "(117)",
+      "Electricity",
+      "Generation"
+    ],
+    "state": [
+      "West",
+      "Bengal"
+    ],
+    "cost": [
+      "(1193.55)",
+      "185612.91"
+    ],
+    "cum_exp": [
+      "11.42",
+      "48260.78"
+    ],
+    "phys_prog": [
+      "0.22"
+    ],
+    "agency": "Unknown Agency"
+  },
+  {
+    "project_code": "400259",
+    "project_name": [
+      "(N06000152)",
+      "(1665)",
+      "Total",
+      "(9)",
+      "Railways",
+      "Dharamjaigarh-Korba",
+      "(Railway)"
+    ],
+    "state": [
+      "Uttar",
+      "Pradesh"
+    ],
+    "cost": [
+      "(21780.9)",
+      "56050.64",
+      "1686.22"
+    ],
+    "cum_exp": [
+      "21237.52",
+      "29405.74"
+    ],
+    "phys_prog": [
+      "95.68"
+    ],
+    "agency": "Unknown Agency"
+  },
+  {
+    "project_code": "400416",
+    "project_name": [
+      "(Ministry",
+      "of",
+      "Coal)",
+      "(-)",
+      "(371)",
+      "Total",
+      "(2)",
+      "Ministry",
+      "of",
+      "Power",
+      "Coal",
+      "Tubed",
+      "Coal",
+      "Mine",
+      "(Damodar",
+      "Valley",
+      "Corporation)"
+    ],
+    "state": [
+      "Jharkhand"
+    ],
+    "cost": [
+      "(2564.34)",
+      "3485.86",
+      "1581"
+    ],
+    "cum_exp": [
+      "1713.19",
+      "2338.96"
+    ],
+    "phys_prog": [
+      "71"
+    ],
+    "agency": "Unknown Agency"
+  },
+  {
+    "project_code": "603293",
+    "project_name": [
+      "(N18000367)",
+      "(2576)",
+      "Total",
+      "(2)",
+      "Electricity",
+      "Generation",
+      "Dibang",
+      "Multipurpose",
+      "Project",
+      "(National",
+      "Hydroelectric",
+      "Power",
+      "Corporation",
+      "Limited",
+      "[NHPC])"
+    ],
+    "state": [
+      "Jharkhand"
+    ],
+    "cost": [
+      "(784)",
+      "2083",
+      "31876.39"
+    ],
+    "cum_exp": [
+      "471.08",
+      "1072.11"
+    ],
+    "phys_prog": [
+      "67.86"
+    ],
+    "agency": "Unknown Agency"
+  },
+  {
+    "project_code": "602538",
+    "project_name": [
+      "(-)",
+      "(2463)",
+      "Total",
+      "(31)",
+      "Transmission",
+      "&",
+      "Distribution",
+      "Transmission",
+      "Scheme",
+      "for",
+      "Solar",
+      "Energy",
+      "Zone",
+      "in",
+      "Ananthpuram",
+      "2500MW",
+      "and",
+      "Kurnool",
+      "1000MW"
+    ],
+    "state": [
+      "West",
+      "Bengal"
+    ],
+    "cost": [
+      "(1106)",
+      "284729.2",
+      "823"
+    ],
+    "cum_exp": [
+      "1133.78",
+      "130569.01"
+    ],
+    "phys_prog": [
+      "96"
+    ],
+    "agency": "Unknown Agency"
+  },
+  {
+    "project_code": "400005",
+    "project_name": [
+      "(N18000337)",
+      "(4690)",
+      "Transmission",
+      "system",
+      "for",
+      "evacuation",
+      "of",
+      "power",
+      "from",
+      "REZ",
+      "in",
+      "Rajasthan",
+      "20GW",
+      "under",
+      "Phase-III",
+      "Part",
+      "J"
+    ],
+    "state": [
+      "Haveli",
+      "and",
+      "Daman",
+      "&",
+      "Diu,",
+      "Gujarat,",
+      "Maharashtra)",
+      "Multi-States",
+      "(Delhi,"
+    ],
+    "cost": [
+      "(4546.26)",
+      "331"
+    ],
+    "cum_exp": [
+      "4528.07"
+    ],
+    "phys_prog": [
+      "99.9"
+    ],
+    "agency": "Unknown Agency"
+  },
+  {
+    "project_code": "617269",
+    "project_name": [
+      "(Power",
+      "Grid",
+      "Corporation",
+      "of",
+      "India",
+      "Limited",
+      "[POWERGRID])",
+      "(N18000423)",
+      "(-)",
+      "Total",
+      "(69)",
+      "Ministry",
+      "of",
+      "Housing",
+      "&",
+      "Urban",
+      "Affairs",
+      "Construction",
+      "Construction",
+      "of",
+      "One",
+      "Tower",
+      "of",
+      "Office",
+      "Complex",
+      "and",
+      "another",
+      "Tower",
+      "of",
+      "Residential",
+      "quarters",
+      "consisting",
+      "of",
+      "10Nos.",
+      "Type-V,",
+      "10Nos.",
+      "Type-VI",
+      "&",
+      "1No.Type-VII",
+      "Quarters",
+      "i/c",
+      "internal",
+      "water",
+      "supply,",
+      "sanitary",
+      "installation",
+      "and",
+      "all",
+      "development",
+      "and",
+      "bulk",
+      "services,",
+      "Horticulture",
+      "works",
+      "on",
+      "EPC",
+      "Mode-I",
+      "basis",
+      "i/c",
+      "comprehensive",
+      "operation",
+      "and",
+      "maintenance",
+      "of",
+      "Civil,",
+      "E&M",
+      "services",
+      "for",
+      "7",
+      "years",
+      "after",
+      "completion",
+      "of",
+      "original"
+    ],
+    "state": [
+      "Uttar",
+      "Pradesh"
+    ],
+    "cost": [
+      "(212.81)",
+      "208869.73",
+      "644"
+    ],
+    "cum_exp": [
+      "6.38",
+      "69254.78"
+    ],
+    "phys_prog": [
+      "3"
+    ],
+    "agency": "Unknown Agency"
+  },
+  {
+    "project_code": "617412",
+    "project_name": [
+      "construction",
+      "work",
+      "for",
+      "Ranga",
+      "Reddy,",
+      "Secunderabad,",
+      "Medchal,",
+      "AuditI,",
+      "Audit-II",
+      "Commissionerates",
+      "of",
+      "Central",
+      "Tax",
+      "at",
+      "Khajaguda,",
+      "Serilingampally,",
+      "Hyderabad.",
+      "(Central",
+      "Public",
+      "Works",
+      "Department",
+      "-",
+      "CPWD)",
+      "(-)",
+      "(9743)",
+      "Total",
+      "(1)",
+      "Real",
+      "Estate",
+      "Integrated",
+      "Command",
+      "control",
+      "Center",
+      "[ICCC]",
+      "-",
+      "Construction",
+      "and",
+      "Development",
+      "of",
+      "Integrated",
+      "Command",
+      "Control",
+      "Center",
+      "with",
+      "Security,",
+      "Surveillance,",
+      "ITMS,",
+      "Connecting",
+      "Port,",
+      "Ship",
+      "Service,",
+      "Smart",
+      "Solid",
+      "Waste",
+      "Management,",
+      "Smart",
+      "Public",
+      "Transport",
+      "System"
+    ],
+    "state": [
+      "Telangana",
+      "Andaman",
+      "&"
+    ],
+    "cost": [
+      "(644)",
+      "644",
+      "209.88"
+    ],
+    "cum_exp": [
+      "161.57",
+      "161.57"
+    ],
+    "phys_prog": [
+      "21"
+    ],
+    "agency": "Unknown Agency"
+  },
+  {
+    "project_code": "617280",
+    "project_name": [
+      "(Central",
+      "Public",
+      "Works",
+      "Department",
+      "[CPWD])",
+      "(N10000015)",
+      "(-)",
+      "Total",
+      "(1)",
+      "Metals",
+      "&",
+      "Mining",
+      "Expansion",
+      "of",
+      "Malanjkhand",
+      "Copper",
+      "Project",
+      "(Hindustan",
+      "Copper",
+      "Limited",
+      "[HCL])"
+    ],
+    "state": [
+      "West",
+      "Bengal"
+    ],
+    "cost": [
+      "(255.37)",
+      "255.37",
+      "1856.36"
+    ],
+    "cum_exp": [
+      "98.92",
+      "98.92"
+    ],
+    "phys_prog": [
+      "64"
+    ],
+    "agency": "Unknown Agency"
+  },
+  {
+    "project_code": "609019",
+    "project_name": [
+      "(Indian",
+      "Institute",
+      "of",
+      "Technology,",
+      "Kharagpur)",
+      "(N28000146)",
+      "(4351)",
+      "Total",
+      "(30)",
+      "Department",
+      "of",
+      "Sports",
+      "Education",
+      "National",
+      "Sports",
+      "University",
+      "[NSU],",
+      "Imphal",
+      "[Manipur]",
+      "(Department",
+      "of",
+      "Sports",
+      "&",
+      "Youth",
+      "Affairs)"
+    ],
+    "state": [
+      "West",
+      "Bengal"
+    ],
+    "cost": [
+      "(442)",
+      "15165.68",
+      "906.47"
+    ],
+    "cum_exp": [
+      "415.35",
+      "8310.52"
+    ],
+    "phys_prog": [
+      "96"
+    ],
+    "agency": "Unknown Agency"
+  },
+  {
+    "project_code": "400081",
+    "project_name": [
+      "(-)",
+      "(3895)",
+      "Total",
+      "(1)",
+      "Project",
+      "Assessment,",
+      "Infrastructure",
+      "Monitoring",
+      "and",
+      "Analytics",
+      "for",
+      "Nation-building",
+      "(PAIMANA)",
+      "All",
+      "Ongoing",
+      "Project",
+      "Name",
+      "Sl.No",
+      "(Agency)",
+      "(Project",
+      "Code)",
+      "(Legacy",
+      "OCMS",
+      "Code)",
+      "(PMGID)",
+      "Ministry",
+      "of",
+      "Petroleum",
+      "&",
+      "Natural",
+      "Gas",
+      "Energy",
+      "Storage",
+      "Construction",
+      "of",
+      "LPG",
+      "Facilities",
+      "at",
+      "Kamardanga,",
+      "Assam",
+      "(Hindustan",
+      "Petroleum",
+      "Corporation",
+      "Limited)"
+    ],
+    "state": [
+      "Manipur",
+      "Page",
+      "70",
+      "Projects",
+      "State"
+    ],
+    "cost": [
+      "(611.74)",
+      "906.47",
+      "For",
+      "details",
+      "Orignal",
+      "Cost",
+      "Revised",
+      "Cost",
+      "in",
+      "Rs.",
+      "Crore",
+      "156.36"
+    ],
+    "cum_exp": [
+      "574.12",
+      "574.12",
+      "visit:",
+      "https://paimana-proj.mospi.gov.in",
+      "APRIL",
+      "Cumulative",
+      "Expenditure",
+      "in",
+      "Rs.",
+      "Crore"
+    ],
+    "phys_prog": [
+      "97",
+      "2026",
+      "Physical",
+      "Progress",
+      "(%)"
+    ],
+    "agency": "Unknown Agency"
+  },
+  {
+    "project_code": "604852",
+    "project_name": [
+      "(N16000506)",
+      "(5256)",
+      "Total",
+      "(16)",
+      "Oil",
+      "&",
+      "Gas",
+      "KG-DWN-98/2",
+      "Cluster",
+      "-",
+      "II",
+      "Development",
+      "Project",
+      "-",
+      "NELP",
+      "Block",
+      "(Oil",
+      "and",
+      "Natural",
+      "Gas",
+      "Corporation",
+      "Limited",
+      "[ONGC])"
+    ],
+    "state": [
+      "Uttar",
+      "Pradesh"
+    ],
+    "cost": [
+      "(980.45)",
+      "80623.3",
+      "34012"
+    ],
+    "cum_exp": [
+      "293.88",
+      "101617.3"
+    ],
+    "phys_prog": [
+      "75"
+    ],
+    "agency": "Unknown Agency"
+  },
+  {
+    "project_code": "701354",
+    "project_name": [
+      "(N16000398)",
+      "(2523)",
+      "Mehsana-Bhatinda",
+      "&",
+      "Bhatinda-Jammu",
+      "Natural",
+      "Gas",
+      "Pipeline",
+      "(Ministry",
+      "of",
+      "Petroleum",
+      "&",
+      "Natural",
+      "Gas)"
+    ],
+    "state": [
+      "Madhya",
+      "Pradesh,",
+      "Maharashtra,",
+      "Odisha)",
+      "Multi-States",
+      "(Gujarat,",
+      "Haryana,"
+    ],
+    "cost": [
+      "(8255)",
+      "7392"
+    ],
+    "cum_exp": [
+      "7070.1"
+    ],
+    "phys_prog": [
+      "98.9"
+    ],
+    "agency": "Unknown Agency"
+  },
+  {
+    "project_code": "612259",
+    "project_name": [
+      "(-)",
+      "(5623)",
+      "Total",
+      "(11)",
+      "Project",
+      "Assessment,",
+      "Infrastructure",
+      "Monitoring",
+      "and",
+      "Analytics",
+      "for",
+      "Nation-building",
+      "(PAIMANA)",
+      "All",
+      "Ongoing",
+      "Project",
+      "Name",
+      "Sl.No",
+      "(Agency)",
+      "(Project",
+      "Code)",
+      "(Legacy",
+      "OCMS",
+      "Code)",
+      "(PMGID)",
+      "Ministry",
+      "of",
+      "Ports,",
+      "Shipping",
+      "and",
+      "Waterways",
+      "Inland",
+      "Waterways",
+      "Jal",
+      "Marg",
+      "Vikas",
+      "Project",
+      "(Inland",
+      "Waterways",
+      "Authority",
+      "of",
+      "India",
+      "[IWAI])"
+    ],
+    "state": [
+      "Uttarakhand",
+      "Page",
+      "77",
+      "Projects",
+      "State",
+      "Multi-States",
+      "(Bihar,",
+      "Jharkhand,"
+    ],
+    "cost": [
+      "(297.63)",
+      "2871.72",
+      "For",
+      "details",
+      "Orignal",
+      "Cost",
+      "Revised",
+      "Cost",
+      "in",
+      "Rs.",
+      "Crore",
+      "5369.18"
+    ],
+    "cum_exp": [
+      "334.86",
+      "1590",
+      "visit:",
+      "https://paimana-proj.mospi.gov.in",
+      "APRIL",
+      "Cumulative",
+      "Expenditure",
+      "in",
+      "Rs.",
+      "Crore"
+    ],
+    "phys_prog": [
+      "84",
+      "2026",
+      "Physical",
+      "Progress",
+      "(%)"
+    ],
+    "agency": "Unknown Agency"
+  },
+  {
+    "project_code": "701565",
+    "project_name": [
+      "(N25000072)",
+      "(2959)",
+      "Total",
+      "(1)",
+      "Shipping",
+      "Development",
+      "of",
+      "Container",
+      "Terminal",
+      "at",
+      "Tuna-Tekra,",
+      "Deendayal",
+      "Port",
+      "on",
+      "BOT",
+      "Basis",
+      "Under",
+      "PPP",
+      "Mode"
+    ],
+    "state": [
+      "Uttar",
+      "Pradesh,",
+      "West",
+      "Bengal)"
+    ],
+    "cost": [
+      "(5061.15)",
+      "5369.18",
+      "4243.64"
+    ],
+    "cum_exp": [
+      "3990.06",
+      "3990.06"
+    ],
+    "phys_prog": [
+      "81.2"
+    ],
+    "agency": "Unknown Agency"
+  },
+  {
+    "project_code": "701574",
+    "project_name": [
+      "(Paradip",
+      "Port",
+      "Trust",
+      "[PPT])",
+      "(-)",
+      "(2250)",
+      "Total",
+      "(5)",
+      "Tourism,",
+      "Hospitality",
+      "&",
+      "Wellness",
+      "National",
+      "Maritime",
+      "Heritage",
+      "Complex",
+      "[NMHC]",
+      "Phase-I",
+      "(Indian",
+      "Port",
+      "Rail",
+      "&",
+      "Ropeway",
+      "Corporation",
+      "Ltd.",
+      "[IPRCL])"
+    ],
+    "state": [
+      "Odisha"
+    ],
+    "cost": [
+      "(3004.63)",
+      "13572.5",
+      "573"
+    ],
+    "cum_exp": [
+      "2117.12",
+      "10569.44"
+    ],
+    "phys_prog": [
+      "70"
+    ],
+    "agency": "Unknown Agency"
+  },
+  {
+    "project_code": "615202",
+    "project_name": [
+      "(-)",
+      "(6244)",
+      "Total",
+      "(1)",
+      "Project",
+      "Assessment,",
+      "Infrastructure",
+      "Monitoring",
+      "and",
+      "Analytics",
+      "for",
+      "Nation-building",
+      "(PAIMANA)",
+      "All",
+      "Ongoing",
+      "Project",
+      "Name",
+      "Sl.No",
+      "(Agency)",
+      "(Project",
+      "Code)",
+      "(Legacy",
+      "OCMS",
+      "Code)",
+      "(PMGID)",
+      "Steel",
+      "Replacement",
+      "of",
+      "Hot",
+      "Leveller",
+      "No.1",
+      "of",
+      "Plate",
+      "Mill",
+      "at",
+      "Bhilai",
+      "Steel",
+      "Plant",
+      "(Steel",
+      "Authority",
+      "of",
+      "India",
+      "Limited",
+      "[SAIL])"
+    ],
+    "state": [
+      "Chhattisgarh",
+      "Page",
+      "78",
+      "Projects",
+      "State"
+    ],
+    "cost": [
+      "(1756.2)",
+      "1700",
+      "For",
+      "details",
+      "Orignal",
+      "Cost",
+      "Revised",
+      "Cost",
+      "in",
+      "Rs.",
+      "Crore",
+      "198.62"
+    ],
+    "cum_exp": [
+      "258.41",
+      "258.41",
+      "visit:",
+      "https://paimana-proj.mospi.gov.in",
+      "APRIL",
+      "Cumulative",
+      "Expenditure",
+      "in",
+      "Rs.",
+      "Crore"
+    ],
+    "phys_prog": [
+      "20.3",
+      "2026",
+      "Physical",
+      "Progress",
+      "(%)"
+    ],
+    "agency": "Unknown Agency"
+  },
+  {
+    "project_code": "617338",
+    "project_name": [
+      "(-)",
+      "(9892)",
+      "Total",
+      "(18)",
+      "Ministry",
+      "of",
+      "Railways",
+      "Railways",
+      "Nadikudi",
+      "-",
+      "Srikalahasti",
+      "New",
+      "Line",
+      "(South",
+      "Central",
+      "Railway",
+      "[SCR]",
+      "-",
+      "II)"
+    ],
+    "state": [
+      "West",
+      "Bengal"
+    ],
+    "cost": [
+      "(2518.39)",
+      "17811.66",
+      "2312"
+    ],
+    "cum_exp": [
+      "375.65",
+      "10073.03"
+    ],
+    "phys_prog": [
+      "22.5"
+    ],
+    "agency": "Unknown Agency"
+  },
+  {
+    "project_code": "619187",
+    "project_name": [
+      "in",
+      "the",
+      "State",
+      "of",
+      "West",
+      "Bengal",
+      "on",
+      "EPC",
+      "mode",
+      "(NHIDCL)",
+      "(-)",
+      "(-)",
+      "Total",
+      "(1137)",
+      "Department",
+      "of",
+      "Telecommunications",
+      "Telecommunication",
+      "SETTING",
+      "UP",
+      "OF",
+      "PHYSICAL",
+      "INFRASTRUCTURE",
+      "FOR",
+      "THE",
+      "NATIONAL",
+      "INSTITUTE",
+      "OF",
+      "COMMUNICATION",
+      "FINANCE",
+      "[NICF]",
+      "AT",
+      "GHITORNI"
+    ],
+    "state": [
+      "West",
+      "Bengal"
+    ],
+    "cost": [
+      "(152.27)",
+      "1054522.87",
+      "248.2"
+    ],
+    "cum_exp": [
+      "0",
+      "369901.55"
+    ],
+    "phys_prog": [
+      "27.3"
+    ],
+    "agency": "Unknown Agency"
+  },
+  {
+    "project_code": "616604",
+    "project_name": [
+      "(National",
+      "Mission",
+      "for",
+      "Clean",
+      "Ganga)",
+      "(N30000042)",
+      "(-)",
+      "Total",
+      "(8)",
+      "Water",
+      "Resources",
+      "Sardar",
+      "Gouthu",
+      "Latchanna",
+      "Thotapalli",
+      "Barrage",
+      "Project",
+      "(Water",
+      "Resources-AP)"
+    ],
+    "state": [
+      "West",
+      "Bengal"
+    ],
+    "cost": [
+      "(154.73)",
+      "4039.12",
+      "353.05"
+    ],
+    "cum_exp": [
+      "96.17",
+      "1643.05"
+    ],
+    "phys_prog": [
+      "93"
+    ],
+    "agency": "Unknown Agency"
+  },
+  {
+    "project_code": "613787",
+    "project_name": [
+      "(-)",
+      "(6135)",
+      "Total",
+      "(40)",
+      "Note:",
+      "\u2022",
+      "Projects",
+      "with",
+      "ids",
+      "618051,",
+      "618307,",
+      "619065,",
+      "619113",
+      "and",
+      "618816",
+      "are",
+      "not",
+      "and",
+      "will",
+      "be",
+      "published",
+      "when",
+      "the",
+      "data",
+      "will",
+      "be",
+      "rectified.",
+      "\u2022",
+      "Projects",
+      "with",
+      "Revised",
+      "Cost",
+      "Less",
+      "than",
+      "Rs.",
+      "150",
+      "cr",
+      "may",
+      "or",
+      "may",
+      "not",
+      "be",
+      "correct,",
+      "Project",
+      "Assessment,",
+      "Infrastructure",
+      "Monitoring",
+      "and",
+      "Analytics",
+      "for",
+      "Nation-building",
+      "(PAIMANA)"
+    ],
+    "state": [
+      "Uttarakhand",
+      "published",
+      "in",
+      "the",
+      "data",
+      "****",
+      "Page",
+      "161"
+    ],
+    "cost": [
+      "(2584.1)",
+      "117255.04",
+      "to",
+      "inconsistency",
+      "For",
+      "details"
+    ],
+    "cum_exp": [
+      "1267.4",
+      "160182.16",
+      "in",
+      "Cumulative",
+      "visit:",
+      "https://paimana-proj.mospi.gov.in"
+    ],
+    "phys_prog": [
+      "25.08",
+      "Expenditure"
+    ],
+    "agency": "Unknown Agency"
+  }
+]

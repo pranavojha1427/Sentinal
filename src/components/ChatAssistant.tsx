@@ -96,7 +96,17 @@ export default function ChatAssistant() {
 
       {/* Chat Widget Panel */}
       {isOpen && (
-        <div className="fixed bottom-6 right-6 w-[400px] h-[600px] max-h-[80vh] bg-white rounded-2xl shadow-2xl flex flex-col z-50 border border-gray-200 overflow-hidden">
+        <>
+        <style>{`
+          @keyframes macOpen {
+            0% { opacity: 0; transform: scale(0.85) translateY(20px); transform-origin: bottom right; }
+            100% { opacity: 1; transform: scale(1) translateY(0); transform-origin: bottom right; }
+          }
+        `}</style>
+        <div 
+          className="fixed bottom-6 right-6 w-[750px] max-w-[95vw] h-[800px] max-h-[85vh] bg-white rounded-2xl shadow-2xl flex flex-col z-50 border border-gray-200 overflow-hidden"
+          style={{ animation: 'macOpen 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards' }}
+        >
           {/* Header */}
           <div className="bg-blue-600 text-white p-4 flex justify-between items-center shrink-0">
             <div className="flex items-center gap-2">
@@ -209,6 +219,7 @@ export default function ChatAssistant() {
             </div>
           </div>
         </div>
+        </>
       )}
     </>
   );

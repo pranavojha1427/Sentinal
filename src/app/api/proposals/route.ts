@@ -1,0 +1,172 @@
+import { createClient } from "@/utils/supabase/server";
+import { NextResponse } from "next/server";
+import clientPromise, { DB_NAME, PROPOSALS_COLLECTION, NOTIFICATIONS_COLLECTION } from "@/lib/mongodb";
+import { getSession } from "@/lib/auth";
+import { ObjectId } from "mongodb";
+import { createMongoProject } from "@/lib/project-store";
+
+export async function GET() {
+  const session = await getSession();
+  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const client = await clientPromise;
+  const db = client.db(DB_NAME);
+  
+  let query: any = {};
+  if (session.role === "ministry" && session.ministry) {
+    query = { $or: [{ ministry: new RegExp(`^${session.ministry}$`, "i") }, { createdBy: session.id }] };
+  } else if (session.role === "agency" && session.agency) {
+    query = { $or: [{ agency: session.agency }, { status: "bidding_open" }] };
+  } else if (session.role !== "admin") {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const proposals = await db.collection(PROPOSALS_COLLECTION).find(query).sort({ createdAt: -1 }).toArray();
+  return NextResponse.json(proposals);
+}
+
+export async function POST(req: Request) {
+  const session = await getSession();
+  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const body = await req.json();
+  const client = await clientPromise;
+  const db = client.db(DB_NAME);
+
+  const proposal = {
+    ...body,
+    type: session.role === "agency" ? "agency_proposal" : "ministry_proposal",
+    status: "pending_admin", // both start by going to admin
+    createdBy: session.id,
+    creatorRole: session.role,
+    creatorName: session.name,
+    ministry: session.ministry || body.ministry,
+    agency: session.agency || body.agency,
+    createdAt: new Date(),
+    feedback: []
+  };
+
+  const res = await db.collection(PROPOSALS_COLLECTION).insertOne(proposal);
+
+  // Notify admin
+  await db.collection(NOTIFICATIONS_COLLECTION).insertOne({
+    targetRole: "admin",
+    title: "New Project Proposal",
+    message: `${session.name} submitted a new project proposal for ${proposal.project_name}.`,
+    isRead: false,
+    createdAt: new Date()
+  });
+
+  return NextResponse.json({ success: true, id: res.insertedId });
+}
+
+export async function PUT(req: Request) {
+  const session = await getSession();
+  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const data = await req.json();
+  const { id, action, feedback, project_code, agency, bidAmount } = data;
+  const client = await clientPromise;
+  const db = client.db(DB_NAME);
+
+  const proposal = await db.collection(PROPOSALS_COLLECTION).findOne({ _id: new ObjectId(id) });
+  if (!proposal) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
+  let newStatus = proposal.status;
+  let notifTarget = null;
+  let notifMsg = "";
+  const updates: any = { $set: {} };
+
+  if (action === "dismiss" && proposal.createdBy === session.id) {
+    newStatus = "dismissed";
+  } else if (session.role === "admin") {
+    if (action === "approve") {
+      if (proposal.type === "agency_proposal") {
+        newStatus = "pending_ministry";
+        notifTarget = { targetMinistry: proposal.ministry };
+        notifMsg = `Admin approved a proposal (${proposal.project_name}) from ${proposal.agency}. Awaiting your final approval.`;
+      } else {
+        newStatus = "bidding_open";
+        notifTarget = { targetRole: "agency" }; // all agencies in that ministry
+        notifMsg = `Bidding is now OPEN for ${proposal.project_name}! Submit your bids within 1 week.`;
+      }
+    } else if (action === "reject") {
+      newStatus = "rejected_by_admin";
+      notifTarget = { userId: proposal.createdBy };
+      notifMsg = `Admin rejected your proposal (${proposal.project_name}). Reason: ${feedback}`;
+    } else if (action === "award_bid") {
+      newStatus = "approved"; // finalized
+      if (agency && bidAmount) {
+         const supabase = await createClient();
+         await supabase.from('projects').insert([{
+           project_code: proposal.project_code || `PRJ-${Date.now()}`,
+           project_name: proposal.project_name || "New Awarded Project",
+           sector: proposal.sector || "Others",
+           hml_category: proposal.sector || "Others",
+           ministry: proposal.ministry || null,
+           agency: agency,
+           state: proposal.state || 'Unknown',
+           original_cost: Number(bidAmount) || Number(proposal.expected_expenditure) || 0,
+           revised_cost: Number(bidAmount) || Number(proposal.expected_expenditure) || 0,
+           cumulative_expenditure: 0,
+           physical_progress: 0
+         }]);
+         updates.$set.agency = agency;
+         updates.$set.expected_expenditure = bidAmount;
+      }
+    }
+  } else if (session.role === "ministry") {
+    if (action === "approve") {
+      newStatus = "approved";
+      notifTarget = { userId: proposal.createdBy };
+      notifMsg = `Ministry approved your proposal (${proposal.project_name})!`;
+      
+      // Create the project in Supabase as well since MongoDB is blocked
+      if (proposal.type === "agency_proposal") {
+         const supabase = await createClient();
+         await supabase.from('projects').insert([{
+           project_code: proposal.project_code || `PRJ-${Date.now()}`,
+           project_name: proposal.project_name || "New Awarded Project",
+           sector: proposal.sector || "Others",
+           hml_category: proposal.sector || "Others",
+           ministry: proposal.ministry || null,
+           agency: proposal.agency,
+           state: proposal.state || 'Unknown',
+           original_cost: Number(proposal.expected_expenditure) || 0,
+           revised_cost: Number(proposal.expected_expenditure) || 0,
+           cumulative_expenditure: 0,
+           physical_progress: 0
+         }]);
+      }
+    } else if (action === "reject") {
+      newStatus = "rejected_by_ministry";
+      notifTarget = { userId: proposal.createdBy };
+      notifMsg = `Ministry rejected your proposal (${proposal.project_name}). Reason: ${feedback}`;
+    }
+  }
+
+  updates.$set.status = newStatus;
+  if (project_code) {
+    updates.$set.project_code = project_code;
+  }
+  if (newStatus === "bidding_open") {
+    updates.$set.biddingStartedAt = new Date();
+  }
+  if (feedback) {
+    updates.$push = { feedback: { text: feedback, author: session.name, role: session.role, date: new Date() } };
+  }
+  
+  await db.collection(PROPOSALS_COLLECTION).updateOne({ _id: new ObjectId(id) }, updates);
+
+  if (notifTarget) {
+    await db.collection(NOTIFICATIONS_COLLECTION).insertOne({
+      ...notifTarget,
+      title: "Proposal Update",
+      message: notifMsg,
+      isRead: false,
+      createdAt: new Date()
+    });
+  }
+
+  return NextResponse.json({ success: true, status: newStatus });
+}
