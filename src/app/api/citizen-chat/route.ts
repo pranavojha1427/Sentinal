@@ -11,35 +11,40 @@ export async function POST(req: Request) {
       prompt = "You are a helpful assistant for the PragatiPulse Citizen Participation Portal. The user has provided more details about their infrastructure problem. Analyze their complaint and determine which specific Indian Government Ministry or Department is responsible (e.g., 'Ministry of Road Transport and Highways', 'Municipal Corporation', 'Water Board', etc.). Then, reply in the EXACT SAME LANGUAGE they used. Thank them and explicitly state which department their complaint has been forwarded to. Keep it to 1-3 sentences. DO NOT use English unless the user used English.";
     }
 
-    const payload = {
-      model: "llama3-8b-8192",
-      messages: [
-        { role: "system", content: prompt },
-        ...messages.map((m: any) => ({ role: m.role, content: m.text }))
-      ],
-      temperature: 0.3,
-    };
+    const formattedMessages = messages.map((m: any) => ({
+      role: m.role === 'system' ? 'model' : 'user',
+      parts: [{ text: m.text }]
+    }));
 
-    const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+    const res = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent", {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${process.env.GROQ_API_KEY}`,
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
+        "x-goog-api-key": process.env.GOOGLE_API_KEY!
       },
-      body: JSON.stringify(payload)
+      body: JSON.stringify({
+        systemInstruction: {
+          parts: [{ text: prompt }]
+        },
+        contents: formattedMessages,
+        generationConfig: {
+          temperature: 0.3
+        }
+      })
     });
 
     if (!res.ok) {
         const errText = await res.text();
-        console.error("Groq API Error:", errText);
-        return NextResponse.json({ text: `[DEBUG VERCEL] Error: ${res.status} ${errText} - Key length: ${process.env.GROQ_API_KEY?.length || 0}` });
+        console.error("Gemini API Error:", errText);
+        return NextResponse.json({ text: `[DEBUG VERCEL GEMINI] Error: ${res.status} ${errText}` });
     }
 
     const data = await res.json();
-    if (data.choices && data.choices[0] && data.choices[0].message) {
-        return NextResponse.json({ text: data.choices[0].message.content });
+    let responseText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (responseText) {
+        return NextResponse.json({ text: responseText });
     } else {
-        return NextResponse.json({ text: "[DEBUG VERCEL] No choices returned from Groq." });
+        return NextResponse.json({ text: "[DEBUG VERCEL] No choices returned from Gemini." });
     }
   } catch (error: any) {
     console.error("Chat API caught error:", error);
