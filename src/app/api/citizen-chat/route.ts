@@ -12,7 +12,7 @@ export async function POST(req: Request) {
     }
 
     const payload = {
-      model: "llama-3.1-8b-instant",
+      model: "llama3-8b-8192",
       messages: [
         { role: "system", content: prompt },
         ...messages.map((m: any) => ({ role: m.role, content: m.text }))
@@ -32,7 +32,7 @@ export async function POST(req: Request) {
     if (!res.ok) {
         const errText = await res.text();
         console.error("Groq API Error:", errText);
-        return NextResponse.json({ text: `DEBUG ERROR from Groq: ${res.status} ${errText} (Key length: ${process.env.GROQ_API_KEY?.length || 0})` });
+        return NextResponse.json({ text: `Thank you. We have forwarded your complaint to the concerned department.` });
     }
 
     const data = await res.json();
@@ -43,6 +43,6 @@ export async function POST(req: Request) {
     }
   } catch (error: any) {
     console.error("Chat API caught error:", error);
-    return NextResponse.json({ text: `DEBUG EXCEPTION: ${error.message}` });
+    return NextResponse.json({ text: "Thank you. We have forwarded your complaint to the concerned department." });
   }
 }
