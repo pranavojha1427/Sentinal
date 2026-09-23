@@ -91,14 +91,14 @@ export default function CitizenPortal() {
 
     // Simple mocked AI conversational flow for demonstration
     setTimeout(() => {
-      if (newMessages.length === 1) {
-        setMessages([...newMessages, { role: "system", text: "हमें आपकी समस्या मिल गई है। क्या आप हमें बता सकते हैं कि यह समस्या कितने समय से है?" }] as any);
-      } else if (newMessages.length === 3) {
+      if (newMessages.length === 2) {
+        setMessages([...newMessages, { role: "system", text: "Could you please provide more details about the issue so we can inform the correct department?" }] as any);
+      } else if (newMessages.length === 4) {
         setMessages([...newMessages, { role: "system", text: "Thank you. We have forwarded your complaint and location to the concerned department." }] as any);
         
         // Actually submit to our FastAPI / Supabase backend here
         if (location) {
-          fetch('http://localhost:8000/api/v1/citizen/ingest', {
+          fetch('https://sentinal-api.onrender.com/api/v1/citizen/ingest', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -107,7 +107,7 @@ export default function CitizenPortal() {
                 lat: location.lat,
                 lon: location.lon,
                 raw_text: textToSend, // Sending the initial complaint text
-                language: "hi"
+                language: "en"
             })
           }).catch(e => console.error("API error", e));
         }
