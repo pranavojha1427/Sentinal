@@ -48,7 +48,7 @@ export default function ParticipatoryDemandPage() {
           <div className="bg-gradient-to-br from-indigo-500 to-blue-600 p-5 rounded-xl border border-slate-200 shadow-sm text-white">
             <h3 className="font-semibold mb-2">Simulate Incoming Data</h3>
             <p className="text-xs text-indigo-100 mb-4">
-              Our FastAPI ingestion layer is connected. You can simulate high-volume citizen WhatsApp texts to watch the map react in real-time.
+              Our FastAPI ingestion layer is connected. You can simulate high-volume citizen complaints submitted via the PragatiPulse portal to watch the map react in real-time.
             </p>
             <button className="w-full py-2 bg-white text-blue-700 text-sm font-semibold rounded shadow-sm hover:bg-slate-50 transition-colors">
               Run Demand Simulation

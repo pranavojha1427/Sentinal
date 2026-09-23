@@ -3,9 +3,9 @@ import hashlib
 from fastapi import APIRouter, HTTPException, BackgroundTasks
 from pydantic import BaseModel
 from supabase import create_client, Client
-import google.generativeai as genai
 import json
 from dotenv import load_dotenv
+from groq import Groq
 
 load_dotenv() # Load variables from .env
 
@@ -13,16 +13,10 @@ router = APIRouter(prefix="/api/v1/citizen", tags=["Citizen Engagement"])
 
 SUPABASE_URL = os.getenv("NEXT_PUBLIC_SUPABASE_URL")
 SUPABASE_KEY = os.getenv("NEXT_PUBLIC_SUPABASE_ANON_KEY")
-GEMINI_API_KEY = os.getenv("GOOGLE_API_KEY") # User's env uses GOOGLE_API_KEY
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
-
-if GEMINI_API_KEY:
-    genai.configure(api_key=GEMINI_API_KEY)
-    # Using Gemini 1.5 Flash for fast NER and translation
-    model = genai.GenerativeModel('gemini-1.5-flash')
-else:
-    model = None
+groq_client = Groq(api_key=GROQ_API_KEY) if GROQ_API_KEY else None
 
 class CitizenComplaintRequest(BaseModel):
     phone_number: str
@@ -33,11 +27,11 @@ class CitizenComplaintRequest(BaseModel):
     language: str = "en"
 
 def process_complaint_and_cluster(hashed_phone: str, req: CitizenComplaintRequest):
-    if not model:
-        print("Error: Gemini API not configured.")
+    if not groq_client:
+        print("Error: Groq API not configured.")
         return
 
-    # 1. Analyze Complaint with Gemini
+    # 1. Analyze Complaint with Groq
     prompt = f"""
     Analyze the following citizen complaint regarding local infrastructure.
     
@@ -49,20 +43,24 @@ def process_complaint_and_cluster(hashed_phone: str, req: CitizenComplaintReques
         "translated_text": "The complaint translated to English. If it's already English, just copy it.",
         "infrastructure_category": "A short category like 'Roads', 'Water', 'Healthcare', 'Electricity'.",
         "ministry": "The likely relevant Indian Government Ministry (e.g., 'Ministry of Road Transport and Highways').",
-        "sentiment_score": "A float between -1.0 (very negative/angry) to +1.0 (very positive). Likely negative for complaints.",
+        "sentiment_score": 0.0,
         "urgency_level": "One of: 'Low', 'Medium', 'High', 'Critical'.",
         "proposed_solution": "A detailed, practical idea or engineering solution to tackle this specific complaint."
     }}
     """
     
     try:
-        response = model.generate_content(
-            prompt,
-            generation_config=genai.GenerationConfig(response_mime_type="application/json")
+        completion = groq_client.chat.completions.create(
+            model="llama-3.1-8b-instant",
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.1
         )
-        analysis = json.loads(response.text)
+        response_text = completion.choices[0].message.content.strip()
+        if response_text.startswith("```json"):
+            response_text = response_text.split("```json")[1].split("```")[0].strip()
+        analysis = json.loads(response_text)
     except Exception as e:
-        print(f"Gemini AI processing failed: {e}")
+        print(f"Groq AI processing failed: {e}")
         return
 
     # 2. Insert into Supabase (citizen_requests)

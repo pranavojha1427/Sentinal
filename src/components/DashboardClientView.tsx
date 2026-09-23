@@ -12,6 +12,13 @@ import { WorkflowInbox } from "@/components/WorkflowInbox";
 import { ProposalForm } from "@/components/ProposalForm";
 import { NotificationBell } from "@/components/NotificationBell";
 import { SessionUser } from "@/lib/auth";
+import AdminGatekeeper from "@/components/AdminGatekeeper";
+import dynamic from "next/dynamic";
+
+const DemandMap = dynamic(() => import("@/components/DemandMap"), {
+  ssr: false,
+  loading: () => <div className="h-[600px] bg-slate-100 animate-pulse flex items-center justify-center rounded-xl border border-slate-200 text-slate-500">Initializing Participatory Engine Maps...</div>
+});
 
 
 const sectors = [
@@ -25,6 +32,7 @@ const TAB_ITEMS = [
   { id: "dashboard", label: "Dashboard" },
   { id: "proposals", label: "Bidding / Project Addition" },
   { id: "my-projects", label: "My Projects" },
+  { id: "participatory", label: "Participatory Priority Engine" },
   { id: "agency", label: "Agency Leaderboard" },
   { id: "benchmarks", label: "Benchmarks" },
   { id: "risk", label: "Risk Prediction" },
@@ -362,11 +370,52 @@ export function DashboardClientView({ allProjects, agencyData, benchResData, ale
           )}
         </div>
       )}
+      
+      {activeTab === "participatory" && (
+        <div className="space-y-8 p-6 bg-slate-50 border border-slate-200 shadow-sm">
+          <div className="mb-4">
+            <h2 className="text-2xl font-bold text-slate-800">Participatory Priority Engine</h2>
+            <p className="text-sm text-slate-500">Real-time geospatial intelligence mapping citizen demand to infrastructure allocation.</p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div className="md:col-span-3 h-[600px] border-2 border-slate-200 shadow-inner overflow-hidden rounded-xl bg-white">
+              <Suspense fallback={<div>Loading Maps...</div>}>
+                <DemandMap />
+              </Suspense>
+            </div>
+            
+            <div className="space-y-4">
+              <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+                <h3 className="font-semibold text-slate-800 mb-4">Hotspot Escalation Engine</h3>
+                <ul className="text-sm space-y-3 text-slate-600">
+                  <li className="flex items-start">
+                    <span className="h-2 w-2 mt-1.5 mr-2 rounded-full bg-blue-500 flex-shrink-0"></span>
+                    <span>Individual citizen complaints (submitted via PragatiPulse Portal) appear as <strong className="text-slate-800">blue markers</strong>. AI extracts the category, sentiment, and urgency.</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="h-2 w-2 mt-1.5 mr-2 rounded-full bg-red-500 flex-shrink-0"></span>
+                    <span>When 5+ complaints of the same category cluster within 5km, a <strong className="text-slate-800">Red Polygon Hotspot</strong> is formed via PostGIS DBSCAN.</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="h-2 w-2 mt-1.5 mr-2 rounded-full bg-green-500 flex-shrink-0"></span>
+                    <span>These hotspots automatically generate predictive impact scores and are routed to the relevant Ministry.</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-8 pt-8 border-t border-slate-200">
+            <AdminGatekeeper />
+          </div>
+        </div>
+      )}
+
       {activeTab === "accounts" && currentUser?.role === "admin" ? (
         <AdminAccountManager />
       ) : activeTab === "my-projects" && currentUser?.role === "agency" ? (
         <AgencyProjectManager projects={allProjects.filter((p: any) => p.agency === currentUser?.agency && !p.is_completed)} agency={currentUser?.agency!} />
-      ) : activeTab !== "dashboard" && activeTab !== "proposals" && (
+      ) : activeTab !== "dashboard" && activeTab !== "proposals" && activeTab !== "participatory" && (
         <AnalyticsTabs
           activeTab={activeTab}
           agencyData={agencyData}
