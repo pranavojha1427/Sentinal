@@ -32,17 +32,17 @@ export async function POST(req: Request) {
     if (!res.ok) {
         const errText = await res.text();
         console.error("Groq API Error:", errText);
-        return NextResponse.json({ text: `Thank you. We have forwarded your complaint to the concerned department.` });
+        return NextResponse.json({ text: `[DEBUG VERCEL] Error: ${res.status} ${errText} - Key length: ${process.env.GROQ_API_KEY?.length || 0}` });
     }
 
     const data = await res.json();
     if (data.choices && data.choices[0] && data.choices[0].message) {
         return NextResponse.json({ text: data.choices[0].message.content });
     } else {
-        return NextResponse.json({ text: "Thank you. We have forwarded your complaint to the concerned department." });
+        return NextResponse.json({ text: "[DEBUG VERCEL] No choices returned from Groq." });
     }
   } catch (error: any) {
     console.error("Chat API caught error:", error);
-    return NextResponse.json({ text: "Thank you. We have forwarded your complaint to the concerned department." });
+    return NextResponse.json({ text: `[DEBUG VERCEL] Exception: ${error.message}` });
   }
 }
