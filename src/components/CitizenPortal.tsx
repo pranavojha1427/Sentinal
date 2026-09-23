@@ -127,10 +127,38 @@ export default function CitizenPortal() {
   };
 
   const loadNearbyProjects = async () => {
-    // Mocking fetching nearby projects from Supabase
     setStep("feedback");
-    const { data } = await supabase.from("projects").select("id, project_name, sector").limit(5);
-    if (data) setNearbyProjects(data);
+    try {
+        let query = supabase.from("projects").select("id, project_name, sector, state");
+        
+        if (location) {
+            // Reverse geocode to get the state
+            const geoRes = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${location.lat}&lon=${location.lon}`, {
+                headers: { 'User-Agent': 'PragatiPulse/1.0' }
+            });
+            const geoData = await geoRes.json();
+            const stateName = geoData.address?.state;
+            
+            if (stateName) {
+                // Filter by state name. Use ilike to handle minor casing differences
+                query = query.ilike("state", `%${stateName}%`);
+            }
+        }
+        
+        const { data } = await query.limit(5);
+        if (data && data.length > 0) {
+            setNearbyProjects(data);
+        } else {
+            // Fallback if no projects in their state, just get the first 5
+            const fallback = await supabase.from("projects").select("id, project_name, sector, state").limit(5);
+            if (fallback.data) setNearbyProjects(fallback.data);
+        }
+    } catch (e) {
+        console.error("Error loading nearby projects:", e);
+        // Fallback
+        const { data } = await supabase.from("projects").select("id, project_name, sector, state").limit(5);
+        if (data) setNearbyProjects(data);
+    }
   };
 
   return (
@@ -274,7 +302,7 @@ export default function CitizenPortal() {
              <div className="flex-1 p-4 overflow-y-auto space-y-3">
                 {nearbyProjects.map(p => (
                   <div key={p.id} className="bg-white border border-slate-200 p-4 rounded-xl hover:border-indigo-500 cursor-pointer">
-                    <div className="text-xs font-semibold text-indigo-600 uppercase mb-1">{p.sector}</div>
+                    <div className="text-xs font-semibold text-indigo-600 uppercase mb-1">{p.sector} {p.state ? `• ${p.state}` : ""}</div>
                     <div className="font-semibold text-slate-800 text-sm">{p.project_name}</div>
                     <button 
                       onClick={() => {
