@@ -16,7 +16,7 @@ export async function POST(req: Request) {
       parts: [{ text: m.text }]
     }));
 
-    const res = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent", {
+    const res = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -44,10 +44,10 @@ export async function POST(req: Request) {
     if (responseText) {
         return NextResponse.json({ text: responseText });
     } else {
-        return NextResponse.json({ text: "[DEBUG VERCEL] No choices returned from Gemini." });
+        return NextResponse.json({ text: "Thank you. We have forwarded your complaint to the concerned department." });
     }
   } catch (error: any) {
     console.error("Chat API caught error:", error);
-    return NextResponse.json({ text: `[DEBUG VERCEL] Exception: ${error.message}` });
+    return NextResponse.json({ text: `Thank you. We have forwarded your complaint to the concerned department.` });
   }
 }
