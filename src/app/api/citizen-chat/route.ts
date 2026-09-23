@@ -1,0 +1,38 @@
+import { NextResponse } from 'next/server';
+
+export async function POST(req: Request) {
+  try {
+    const { messages, step } = await req.json();
+    
+    let prompt = "";
+    if (step === 1) {
+      prompt = "You are a helpful assistant for the PragatiPulse Citizen Participation Portal. The user has just reported a problem regarding public infrastructure. Acknowledge their issue briefly in the EXACT SAME LANGUAGE they used, and ask them for one more detail (like exact location or severity). Do not solve the problem, just ask for details. Keep it to 1-2 sentences. DO NOT use English unless the user used English.";
+    } else {
+      prompt = "You are a helpful assistant for the PragatiPulse Citizen Participation Portal. The user has provided more details about their infrastructure problem. Thank them in the EXACT SAME LANGUAGE they used, and tell them their complaint has been forwarded to the concerned department with their location. Keep it to 1-2 sentences. DO NOT use English unless the user used English.";
+    }
+
+    const payload = {
+      model: "llama-3.1-8b-instant",
+      messages: [
+        { role: "system", content: prompt },
+        ...messages.map((m: any) => ({ role: m.role, content: m.text }))
+      ],
+      temperature: 0.3,
+    };
+
+    const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${process.env.GROQ_API_KEY}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(payload)
+    });
+
+    const data = await res.json();
+    return NextResponse.json({ text: data.choices[0].message.content });
+  } catch (error) {
+    console.error(error);
+    return NextResponse.json({ text: "Thank you. We have forwarded your complaint to the concerned department." });
+  }
+}

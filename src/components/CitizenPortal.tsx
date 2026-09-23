@@ -89,30 +89,41 @@ export default function CitizenPortal() {
     const textToSend = inputText;
     setInputText("");
 
-    // Simple mocked AI conversational flow for demonstration
-    setTimeout(() => {
-      if (newMessages.length === 2) {
-        setMessages([...newMessages, { role: "system", text: "Could you please provide more details about the issue so we can inform the correct department?" }] as any);
-      } else if (newMessages.length === 4) {
-        setMessages([...newMessages, { role: "system", text: "Thank you. We have forwarded your complaint and location to the concerned department." }] as any);
+    try {
+        let step = 1;
+        if (newMessages.length >= 3) {
+            step = 2;
+        }
         
-        // Actually submit to our FastAPI / Supabase backend here
-        if (location) {
-          fetch('https://sentinal-api.onrender.com/api/v1/citizen/ingest', {
+        const res = await fetch('/api/citizen-chat', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                phone_number: mobile,
-                device_id: "pulse_web",
-                lat: location.lat,
-                lon: location.lon,
-                raw_text: textToSend, // Sending the initial complaint text
-                language: "en"
-            })
-          }).catch(e => console.error("API error", e));
+            body: JSON.stringify({ messages: newMessages, step })
+        });
+        
+        const data = await res.json();
+        const aiText = data.text || "Thank you. We have forwarded your complaint to the concerned department.";
+        
+        const finalMessages = [...newMessages, { role: "system", text: aiText }];
+        setMessages(finalMessages as any);
+        
+        if (step === 2 && location) {
+            fetch('https://sentinal-api.onrender.com/api/v1/citizen/ingest', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    phone_number: mobile,
+                    device_id: "pulse_web",
+                    lat: location.lat,
+                    lon: location.lon,
+                    raw_text: textToSend, // Sending the initial complaint text
+                    language: "auto"
+                })
+            }).catch(e => console.error("API error", e));
         }
-      }
-    }, 1000);
+    } catch (e) {
+        console.error("Chat error", e);
+    }
   };
 
   const loadNearbyProjects = async () => {
