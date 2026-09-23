@@ -235,7 +235,7 @@ export function DashboardClientView({ allProjects, agencyData, benchResData, ale
 
       {/* Tab Navigation */}
       <div className="flex gap-1 border-b border-slate-200 mb-8 overflow-x-auto">
-        {currentUser && TAB_ITEMS.filter(tab => (tab.id !== "my-projects" || currentUser?.role === "agency") && (tab.id !== "agency" || currentUser?.role !== "agency")).concat(currentUser?.role === "admin" ? [{ id: "accounts", label: "Accounts" }] : []).map((tab) => (
+        {TAB_ITEMS.filter(tab => !currentUser ? (tab.id === 'dashboard' || tab.id === 'participatory') : ((tab.id !== 'my-projects' || currentUser?.role === 'agency') && (tab.id !== 'agency' || currentUser?.role !== 'agency'))).concat(currentUser?.role === 'admin' ? [{ id: 'accounts', label: 'Accounts' }] : []).map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
