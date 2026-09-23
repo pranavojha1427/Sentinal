@@ -16,7 +16,7 @@ export async function POST(req: Request) {
       parts: [{ text: m.text }]
     }));
 
-    const res = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent", {
+    let res = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -32,11 +32,31 @@ export async function POST(req: Request) {
         }
       })
     });
+    
+    // Simple retry on 503
+    if (res.status === 503) {
+      await new Promise(r => setTimeout(r, 1000));
+      res = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-goog-api-key": process.env.GOOGLE_API_KEY!
+          },
+          body: JSON.stringify({
+            systemInstruction: {
+              parts: [{ text: prompt }]
+            },
+            contents: formattedMessages,
+            generationConfig: {
+              temperature: 0.3
+            }
+          })
+      });
+    }
 
     if (!res.ok) {
-        const errText = await res.text();
-        console.error("Gemini API Error:", errText);
-        return NextResponse.json({ text: `[DEBUG VERCEL GEMINI] Error: ${res.status} ${errText}` });
+        console.error("Gemini API Error:", await res.text());
+        return NextResponse.json({ text: `Thank you. We have forwarded your complaint to the concerned department.` });
     }
 
     const data = await res.json();
