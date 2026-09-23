@@ -94,7 +94,7 @@ export default function CitizenPortal() {
       if (newMessages.length === 1) {
         setMessages([...newMessages, { role: "system", text: "हमें आपकी समस्या मिल गई है। क्या आप हमें बता सकते हैं कि यह समस्या कितने समय से है?" }] as any);
       } else if (newMessages.length === 3) {
-        setMessages([...newMessages, { role: "system", text: "धन्यवाद। हमने आपकी शिकायत (लोकेशन के साथ) संबंधित विभाग को भेज दी है।" }] as any);
+        setMessages([...newMessages, { role: "system", text: "Thank you. We have forwarded your complaint and location to the concerned department." }] as any);
         
         // Actually submit to our FastAPI / Supabase backend here
         if (location) {
@@ -173,7 +173,7 @@ export default function CitizenPortal() {
             <button 
               onClick={() => {
                 setStep("complaint");
-                setMessages([{ role: "system", text: "नमस्ते! आप अपनी शिकायत बोलकर या लिखकर दर्ज कर सकते हैं।" }]);
+                setMessages([{ role: "system", text: "Welcome! You can register your complaint by speaking or typing in any language (English, Hindi, Bengali, etc.)." }]);
                 requestLocation();
               }}
               className="w-full text-left p-4 border border-slate-200 hover:border-indigo-500 hover:bg-indigo-50 rounded-xl transition flex items-center group"
@@ -268,7 +268,7 @@ export default function CitizenPortal() {
                     <button 
                       onClick={() => {
                         setStep("complaint");
-                        setMessages([{ role: "system", text: `आप "${p.project_name}" के बारे में अपना फीडबैक बोलकर दर्ज कर सकते हैं।` }]);
+                        setMessages([{ role: "system", text: `You can provide your feedback for "${p.project_name}" by speaking or typing in any language.` }]);
                       }}
                       className="mt-3 text-xs bg-slate-100 text-slate-700 px-3 py-1.5 rounded-lg hover:bg-slate-200 font-semibold flex items-center"
                     >
