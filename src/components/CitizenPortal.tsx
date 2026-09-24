@@ -1,166 +1,107 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
-import { Mic, Send, MapPin, CheckCircle, ArrowLeft } from "lucide-react";
-import { supabase } from "@/lib/supabaseClient";
-
-// A mock of the SpeechRecognition API for TypeScript
-declare global {
-  interface Window {
-    SpeechRecognition: any;
-    webkitSpeechRecognition: any;
-  }
-}
+import { useState, useEffect, useRef } from "react";
+import { ArrowLeft, Mic, Send, MapPin, CheckCircle } from "lucide-react";
 
 export default function CitizenPortal() {
-  const [step, setStep] = useState<"login" | "otp" | "menu" | "complaint" | "feedback">("login");
+  const [step, setStep] = useState<"login" | "otp" | "menu" | "complaint">("login");
   const [mobile, setMobile] = useState("");
   const [otp, setOtp] = useState("");
   const [location, setLocation] = useState<{lat: number, lon: number} | null>(null);
   
-  // Chat State
-  const [messages, setMessages] = useState<{role: "system" | "user", text: string}[]>([]);
-  const [inputText, setInputText] = useState("");
-  const [isTyping, setIsTyping] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
 
+  // Form States
+  const [name, setName] = useState("");
+  const [ministry, setMinistry] = useState("");
+  const [details, setDetails] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
+  useEffect(() => {
+    // Skip to menu if we are bypassing login in dev
+    if (localStorage.getItem('citizen_phone')) {
+      setMobile(localStorage.getItem('citizen_phone')!);
+      setStep("menu");
+    }
+  }, []);
 
   const requestLocation = () => {
-    if ("geolocation" in navigator) {
+    if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (pos) => setLocation({ lat: pos.coords.latitude, lon: pos.coords.longitude }),
-        (err) => console.warn("Location error:", err)
+        (err) => console.error("Location error", err)
       );
     }
   };
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (mobile.length >= 10) {
-      setStep("otp");
-    }
+    if (mobile.length > 9) setStep("otp");
   };
 
   const handleVerifyOtp = (e: React.FormEvent) => {
     e.preventDefault();
-    if (otp.length >= 4) {
+    if (otp.length === 6) {
+      localStorage.setItem('citizen_phone', mobile);
       setStep("menu");
-      requestLocation();
     }
   };
 
   const toggleRecording = async () => {
     if (isRecording) {
-      mediaRecorderRef.current?.stop();
-      setIsRecording(false);
+      stopRecording();
     } else {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        const mediaRecorder = new MediaRecorder(stream);
-        mediaRecorderRef.current = mediaRecorder;
-        audioChunksRef.current = [];
-
-        mediaRecorder.ondataavailable = (event) => {
-          if (event.data.size > 0) {
-            audioChunksRef.current.push(event.data);
-          }
-        };
-
-        mediaRecorder.onstop = async () => {
-          const audioBlob = new Blob(audioChunksRef.current, { type: "audio/webm" });
-          const formData = new FormData();
-          formData.append("audio", audioBlob, "recording.webm");
-          
-          setInputText("Transcribing...");
-          try {
-            const res = await fetch("/api/transcribe", {
-              method: "POST",
-              body: formData
-            });
-            if (res.ok) {
-              const data = await res.json();
-              if (data.text) {
-                setInputText(data.text);
-              } else {
-                setInputText("");
-              }
-            } else {
-              setInputText("");
-              console.error("Failed to transcribe");
-            }
-          } catch (e) {
-            console.error(e);
-            setInputText("");
-          }
-          
-          stream.getTracks().forEach(track => track.stop());
-        };
-
-        mediaRecorder.start();
-        setIsRecording(true);
-      } catch (err) {
-        console.error("Microphone access denied", err);
-      }
+      startRecording();
     }
   };
 
-  const handleSendComplaint = async () => {
-    if (!inputText.trim()) return;
-    
-    // Add user message
-    const newMessages = [...messages, { role: "user", text: inputText }];
-    setMessages(newMessages as any);
-    const textToSend = inputText;
-    setInputText("");
-    setIsTyping(true);
-
+  const startRecording = async () => {
     try {
-        let step = 1;
-        if (newMessages.length >= 3) {
-            step = 2;
-        }
-        
-        const res = await fetch('/api/citizen-chat', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ messages: newMessages, step, location, mobile })
-        });
-        
-        const data = await res.json();
-        const aiText = data.text || "Thank you. We have forwarded your complaint to the concerned department.";
-        
-        const finalMessages = [...newMessages, { role: "system", text: aiText }];
-        setMessages(finalMessages as any);
-        
-        if (step === 2 && location) {
-            fetch('https://sentinal-api.onrender.com/api/v1/citizen/ingest', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    phone_number: mobile,
-                    device_id: "pulse_web",
-                    lat: location.lat,
-                    lon: location.lon,
-                    raw_text: textToSend,
-                    language: "auto"
-                })
-            }).catch(e => console.error("API error", e));
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+      audioChunksRef.current = [];
 
-            setTimeout(() => {
-                window.location.href = '/dashboard';
-            }, 7000);
+      mediaRecorder.ondataavailable = (e) => {
+        if (e.data.size > 0) audioChunksRef.current.push(e.data);
+      };
+
+      mediaRecorder.onstop = async () => {
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        const formData = new FormData();
+        formData.append('audio', audioBlob);
+        
+        try {
+          const res = await fetch('/api/transcribe', {
+            method: 'POST',
+            body: formData
+          });
+          const data = await res.json();
+          if (data.text) {
+            setDetails(prev => prev + (prev ? " " : "") + data.text);
+          }
+        } catch (e) {
+          console.error("Transcription error", e);
         }
-    } catch (e) {
-        console.error("Chat error", e);
-    } finally {
-        setIsTyping(false);
+      };
+
+      mediaRecorder.start();
+      setIsRecording(true);
+    } catch (err) {
+      console.error("Error accessing mic", err);
+      alert("Microphone access is required to use voice commands.");
     }
   };
 
-
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+      mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
+    }
+  };
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4">
@@ -239,7 +180,6 @@ export default function CitizenPortal() {
             <button 
               onClick={() => {
                 setStep("complaint");
-                setMessages([{ role: "system", text: "Welcome! You can register your complaint by speaking or typing in any language (English, Hindi, Bengali, etc.)." }]);
                 requestLocation();
               }}
               className="w-full text-left p-4 border border-slate-200 hover:border-indigo-500 hover:bg-indigo-50 rounded-xl transition flex items-center group"
@@ -255,66 +195,106 @@ export default function CitizenPortal() {
           </div>
         )}
 
-        {/* Complaint Chat Step */}
+        {/* Complaint Form Step */}
         {step === "complaint" && (
-          <div className="flex flex-col h-[500px]">
-            <div className="flex-1 p-4 overflow-y-auto space-y-4 bg-slate-50">
-              {messages.map((msg, idx) => (
-                <div key={idx} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
-                  <div className={`max-w-[80%] p-3 rounded-xl text-sm ${msg.role === "user" ? "bg-indigo-600 text-white rounded-br-none" : "bg-white border border-slate-200 text-slate-800 rounded-bl-none"}`}>
-                    {msg.text}
-                  </div>
-                </div>
-              ))}
-            </div>
-                {isTyping && (
-                  <div className="flex justify-start">
-                    <div className="max-w-[80%] p-3 rounded-xl text-sm bg-white border border-slate-200 text-slate-500 rounded-bl-none flex space-x-1 items-center">
-                      <div className="w-2 h-2 bg-slate-300 rounded-full animate-bounce"></div>
-                      <div className="w-2 h-2 bg-slate-300 rounded-full animate-bounce" style={{animationDelay: "0.2s"}}></div>
-                      <div className="w-2 h-2 bg-slate-300 rounded-full animate-bounce" style={{animationDelay: "0.4s"}}></div>
-                    </div>
-                  </div>
-                )}
-            
-            {/* Input Area */}
-            <div className="p-4 bg-white border-t border-slate-200">
-              {location ? (
-                <div className="text-[10px] text-emerald-600 flex items-center mb-2">
-                  <MapPin className="w-3 h-3 mr-1" /> Location captured ({location.lat.toFixed(4)}, {location.lon.toFixed(4)})
-                </div>
-              ) : (
-                <div className="text-[10px] text-amber-600 flex items-center mb-2">
-                  <MapPin className="w-3 h-3 mr-1" /> Requesting location...
-                </div>
-              )}
+          <div className="flex flex-col max-h-[700px] overflow-y-auto">
+            <div className="p-6 space-y-4">
               
-              <div className="flex items-center gap-2">
-                <button 
-                  onClick={toggleRecording}
-                  className={`p-3 rounded-full flex-shrink-0 transition ${isRecording ? 'bg-red-500 text-white animate-pulse' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
-                >
-                  <Mic className="w-5 h-5" />
-                </button>
+              <div>
+                <label className="text-xs font-semibold text-slate-500 uppercase">Name</label>
                 <input 
                   type="text" 
-                  value={inputText}
-                  onChange={e => setInputText(e.target.value)}
-                  placeholder={isRecording ? "Listening..." : "Type or speak..."}
-                  className="flex-1 p-3 border border-slate-300 rounded-xl focus:outline-none focus:border-indigo-500 text-sm"
-                  onKeyDown={e => e.key === 'Enter' && handleSendComplaint()}
+                  value={name}
+                  onChange={e => setName(e.target.value)}
+                  placeholder="Enter your name" 
+                  className="w-full mt-1 p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+                  required
                 />
-                <button 
-                  onClick={handleSendComplaint}
-                  className="p-3 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition flex-shrink-0"
-                >
-                  <Send className="w-5 h-5" />
-                </button>
               </div>
+
+              <div>
+                <label className="text-xs font-semibold text-slate-500 uppercase">Ministry / Department</label>
+                <select 
+                  value={ministry}
+                  onChange={e => setMinistry(e.target.value)}
+                  className="w-full mt-1 p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none bg-white"
+                  required
+                >
+                  <option value="" disabled>Select Ministry</option>
+                  <option value="Ministry of Road Transport and Highways">Road Transport & Highways</option>
+                  <option value="Ministry of Power">Power</option>
+                  <option value="Ministry of Jal Shakti">Jal Shakti (Water)</option>
+                  <option value="Ministry of Railways">Railways</option>
+                  <option value="Ministry of Housing and Urban Affairs">Housing & Urban Affairs</option>
+                  <option value="Ministry of Health">Health & Family Welfare</option>
+                  <option value="Ministry of Education">Education</option>
+                  <option value="Others">Others</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold text-slate-500 uppercase flex justify-between">
+                  <span>Complaint Details (Any Language)</span>
+                  <button 
+                    onClick={toggleRecording}
+                    type="button"
+                    className={`flex items-center gap-1 text-[10px] px-2 py-1 rounded-full ${isRecording ? 'bg-red-100 text-red-600 animate-pulse' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
+                  >
+                    <Mic className="w-3 h-3" /> {isRecording ? "Recording..." : "Record Voice"}
+                  </button>
+                </label>
+                <textarea 
+                  value={details}
+                  onChange={e => setDetails(e.target.value)}
+                  placeholder="Describe the issue in your preferred language..." 
+                  className="w-full mt-1 p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none h-32 resize-none"
+                  required
+                />
+              </div>
+
+              <div className="bg-slate-50 p-3 rounded-lg border border-slate-200">
+                {location ? (
+                  <div className="text-xs text-emerald-600 flex items-center">
+                    <MapPin className="w-4 h-4 mr-2" /> Exact Location Captured ({location.lat.toFixed(4)}, {location.lon.toFixed(4)})
+                  </div>
+                ) : (
+                  <div className="text-xs text-amber-600 flex items-center">
+                    <MapPin className="w-4 h-4 mr-2" /> Requesting location... (Please allow location access)
+                  </div>
+                )}
+              </div>
+
+              <button 
+                onClick={async () => {
+                  if (!name || !ministry || !details) return alert("Please fill all fields");
+                  setIsSubmitting(true);
+                  try {
+                    const res = await fetch('/api/submit-complaint', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ name, phone: mobile, details, location, ministry })
+                    });
+                    if (res.ok) {
+                      setStep('menu');
+                      alert("Complaint registered successfully! The details have been forwarded to the concerned department.");
+                      window.location.href = '/dashboard';
+                    } else {
+                      alert("Failed to submit. Please try again.");
+                    }
+                  } catch (e) {
+                    console.error("Submit error", e);
+                  } finally {
+                    setIsSubmitting(false);
+                  }
+                }}
+                disabled={isSubmitting || !location}
+                className="w-full bg-indigo-600 text-white font-semibold py-3 rounded-lg hover:bg-indigo-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+              >
+                {isSubmitting ? "Submitting..." : <><Send className="w-4 h-4 mr-2" /> Submit Complaint</>}
+              </button>
             </div>
           </div>
         )}
-
 
       </div>
     </div>

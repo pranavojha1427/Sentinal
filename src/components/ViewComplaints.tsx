@@ -60,7 +60,8 @@ export default function ViewComplaints() {
           <table className="w-full text-left border-collapse text-sm">
             <thead>
               <tr className="bg-slate-50 border-b border-slate-200 text-slate-600">
-                <th className="p-4 font-semibold w-1/4">Infrastructure Category</th>
+                <th className="p-4 font-semibold w-1/6">Category / Ministry</th>
+                <th className="p-4 font-semibold w-1/6">Citizen Name</th>
                 <th className="p-4 font-semibold w-1/2">Complaint Description</th>
                 <th className="p-4 font-semibold">State</th>
                 <th className="p-4 font-semibold">Date</th>
@@ -77,10 +78,10 @@ export default function ViewComplaints() {
                 filteredComplaints.map((c: any) => (
                   <tr key={c.id} className="border-b border-slate-100 hover:bg-slate-50">
                     <td className="p-4">
-                      <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs font-semibold">
-                        {c.infrastructure_category || 'Unknown'}
-                      </span>
+                      <div className="bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs font-semibold inline-block mb-1">{c.infrastructure_category || 'Unknown'}</div>
+                      <div className="text-xs text-slate-500">{c.ministry || 'Unassigned'}</div>
                     </td>
+                    <td className="p-4 text-slate-700 font-medium">{c.name || 'Anonymous'}</td>
                     <td className="p-4 text-slate-700">{c.translated_text || c.raw_text}</td>
                     <td className="p-4 text-slate-600">{c.state || 'Unknown'}</td>
                     <td className="p-4 text-slate-500">
