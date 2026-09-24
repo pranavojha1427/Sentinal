@@ -144,10 +144,14 @@ export default function CitizenPortal() {
                     device_id: "pulse_web",
                     lat: location.lat,
                     lon: location.lon,
-                    raw_text: textToSend, // Sending the initial complaint text
+                    raw_text: textToSend,
                     language: "auto"
                 })
             }).catch(e => console.error("API error", e));
+
+            setTimeout(() => {
+                window.location.href = '/participatory-demand';
+            }, 7000);
         }
     } catch (e) {
         console.error("Chat error", e);
