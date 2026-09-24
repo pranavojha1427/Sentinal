@@ -76,12 +76,32 @@ export function ProjectTableAI({ projects }: { projects: any[] }) {
     }
   };
 
-  const handleSendOTP = () => {
+  const handleSendOTP = async () => {
     if (mobileNo.length < 10) {
       setFeedbackError("Please enter a valid 10-digit mobile number.");
       return;
     }
     setFeedbackError("");
+    setIsSubmitting(true);
+    
+    try {
+      const { data } = await supabase
+        .from("project_feedbacks")
+        .select("id")
+        .eq("project_id", feedbackProject.id)
+        .eq("mobile_no", mobileNo)
+        .maybeSingle();
+
+      if (data) {
+        setFeedbackError("Feedback from this mobile number has already been registered for this project.");
+        setIsSubmitting(false);
+        return;
+      }
+    } catch (e) {
+      console.error(e);
+    }
+
+    setIsSubmitting(false);
     setFeedbackStep(1); // Proceed to OTP
   };
 
@@ -377,7 +397,12 @@ export function ProjectTableAI({ projects }: { projects: any[] }) {
             {feedbackStep < 3 ? (
               <>
                 <Button variant="ghost" onClick={closeFeedbackModal} className="text-slate-500 hover:text-slate-700">Cancel</Button>
-                {feedbackStep === 0 && <Button onClick={handleSendOTP} className="bg-indigo-600 hover:bg-indigo-700 text-white">Send OTP</Button>}
+                {feedbackStep === 0 && (
+                  <Button onClick={handleSendOTP} disabled={isSubmitting} className="bg-indigo-600 hover:bg-indigo-700 text-white">
+                    {isSubmitting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+                    Send OTP
+                  </Button>
+                )}
                 {feedbackStep === 1 && <Button onClick={handleVerifyOTP} className="bg-indigo-600 hover:bg-indigo-700 text-white"><ShieldCheck className="w-4 h-4 mr-2"/> Verify Code</Button>}
                 {feedbackStep === 2 && (
                   <Button onClick={handleSubmitFeedback} disabled={isSubmitting} className="bg-emerald-600 hover:bg-emerald-700 text-white">
