@@ -69,15 +69,16 @@ export async function POST(req: Request) {
 
     if (step === 2 && responseText) {
       try {
-        const extracted = JSON.parse(responseText);
-        responseText = extracted.replyToUser;
+        let cleanedText = responseText.replace(/```json/gi, '').replace(/```/g, '').trim();
+        const extracted = JSON.parse(cleanedText);
+        responseText = extracted.replyToUser || extracted.reply_to_user || "Thank you. We have forwarded your complaint to the concerned department.";
         
         // Await the DB insert so Vercel doesn't kill the function before it saves
         let locationStr = location ? `POINT(${location.lon} ${location.lat})` : null;
         let state = "Unknown";
         if (location) {
           try {
-            const geoRes = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${location.lat}&lon=${location.lon}`);
+            const geoRes = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${location.lat}&lon=${location.lon}`, { headers: { 'User-Agent': 'PragatiPulse/1.0' } });
             const geoData = await geoRes.json();
             state = geoData.address?.state || "Unknown";
           } catch(e) {
