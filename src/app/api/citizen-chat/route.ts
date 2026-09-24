@@ -13,7 +13,17 @@ export async function POST(req: Request) {
     if (step === 1) {
       prompt = "You are a helpful assistant for the PragatiPulse Citizen Participation Portal. The user has just reported a problem regarding public infrastructure. Acknowledge their issue briefly in the EXACT SAME LANGUAGE they used, and ask them for one more detail (like exact location or severity). Do not solve the problem, just ask for details. Keep it to 1-2 sentences. DO NOT use English unless the user used English.";
     } else {
-      prompt = "You are a helpful assistant for the PragatiPulse Citizen Participation Portal. The user has provided more details about their infrastructure problem. Analyze their complaint and determine which specific Indian Government Ministry or Department is responsible (e.g., 'Ministry of Road Transport and Highways', 'Municipal Corporation', 'Water Board', etc.). Then, reply in the EXACT SAME LANGUAGE they used. Thank them, explicitly state which department their complaint has been forwarded to, and summarize what the complaint was. Keep it to 1-3 sentences. DO NOT use English unless the user used English.";
+      prompt = `You are a helpful assistant for the PragatiPulse Citizen Participation Portal. The user has provided more details about their infrastructure problem. Analyze their complaint and determine which specific Indian Government Ministry or Department is responsible. 
+      
+      You MUST output a JSON object with exactly these fields:
+      {
+        "replyToUser": "Your reply in the EXACT SAME LANGUAGE the user used. Thank them, state which department it's forwarded to, and summarize the complaint in 1-3 sentences.",
+        "translated_text": "The full complaint translated to English",
+        "language": "The detected original language of the user",
+        "infrastructure_category": "e.g. Roads, Water, Electricity, Sanitation",
+        "ministry": "The relevant Ministry or Department",
+        "sentiment_score": a number from -1.0 (very negative) to 1.0 (positive)
+      }`;
     }
 
     const formattedMessages = messages.map((m: any) => ({
@@ -21,35 +31,33 @@ export async function POST(req: Request) {
       parts: [{ text: m.text }]
     }));
 
-    const callGemini = async (sysPrompt: string, msgs: any, temp: number = 0.3) => {
+    const callGemini = async (sysPrompt: string, msgs: any, temp: number = 0.3, responseMimeType?: string) => {
+      const payload: any = {
+        systemInstruction: { parts: [{ text: sysPrompt }] },
+        contents: msgs,
+        generationConfig: { temperature: temp }
+      };
+      if (responseMimeType) {
+        payload.generationConfig.responseMimeType = responseMimeType;
+      }
+      
       let res = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-goog-api-key": process.env.GOOGLE_API_KEY!
-        },
-        body: JSON.stringify({
-          systemInstruction: { parts: [{ text: sysPrompt }] },
-          contents: msgs,
-          generationConfig: { temperature: temp }
-        })
+        headers: { "Content-Type": "application/json", "x-goog-api-key": process.env.GOOGLE_API_KEY! },
+        body: JSON.stringify(payload)
       });
       if (res.status === 503) {
         await new Promise(r => setTimeout(r, 1000));
         res = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent", {
           method: "POST",
           headers: { "Content-Type": "application/json", "x-goog-api-key": process.env.GOOGLE_API_KEY! },
-          body: JSON.stringify({
-            systemInstruction: { parts: [{ text: sysPrompt }] },
-            contents: msgs,
-            generationConfig: { temperature: temp }
-          })
+          body: JSON.stringify(payload)
         });
       }
       return res;
     };
 
-    let res = await callGemini(prompt, formattedMessages);
+    let res = await callGemini(prompt, formattedMessages, 0.3, step === 2 ? "application/json" : undefined);
 
     if (!res.ok) {
         console.error("Gemini API Error:", await res.text());
@@ -59,58 +67,31 @@ export async function POST(req: Request) {
     const data = await res.json();
     let responseText = data.candidates?.[0]?.content?.parts?.[0]?.text;
 
-    // If this is the final step, we should also extract structured info and save it to Supabase
     if (step === 2 && responseText) {
       try {
-        const fullConversation = messages.map((m: any) => `${m.role}: ${m.text}`).join('\n') + `\nmodel: ${responseText}`;
+        const extracted = JSON.parse(responseText);
+        responseText = extracted.replyToUser;
         
-        const extractPrompt = `You are a data extractor. Read this conversation and extract details about the citizen's complaint into JSON.
-        Required JSON format:
-        {
-          "translated_text": "The full complaint translated to English",
-          "language": "The detected original language of the user (e.g. Hindi, Marathi, English, Bengali)",
-          "infrastructure_category": "e.g. Roads, Water, Electricity, Sanitation",
-          "ministry": "The relevant Ministry or Department",
-          "sentiment_score": a number from -1.0 (very negative) to 1.0 (positive)
-        }`;
+        // Use edge background execution for the DB insert so we don't block the UI response
+        let locationStr = location ? `POINT(${location.lon} ${location.lat})` : null;
+        supabase.from('citizen_requests').insert({
+          hashed_phone: mobile || 'anonymous',
+          location: locationStr,
+          raw_text: messages.filter((m: any) => m.role === 'user').map((m: any) => m.text).join(' | '),
+          translated_text: extracted.translated_text,
+          language: extracted.language,
+          infrastructure_category: extracted.infrastructure_category,
+          ministry: extracted.ministry,
+          sentiment_score: extracted.sentiment_score,
+          urgency_level: 'medium',
+          status: 'pending',
+          channel: 'portal'
+        }).then(({error}) => { if(error) console.error("Supabase insert error", error); });
         
-        let extractRes = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "x-goog-api-key": process.env.GOOGLE_API_KEY!
-          },
-          body: JSON.stringify({
-            systemInstruction: { parts: [{ text: extractPrompt }] },
-            contents: [{ role: "user", parts: [{ text: fullConversation }] }],
-            generationConfig: { temperature: 0.1, responseMimeType: "application/json" }
-          })
-        });
-
-        if (extractRes.ok) {
-          const extractData = await extractRes.json();
-          const jsonText = extractData.candidates?.[0]?.content?.parts?.[0]?.text;
-          const extracted = JSON.parse(jsonText);
-          
-          let locationStr = location ? `POINT(${location.lon} ${location.lat})` : null;
-          
-          // Insert into Supabase
-          await supabase.from('citizen_requests').insert({
-            hashed_phone: mobile || 'anonymous',
-            location: locationStr,
-            raw_text: messages.filter((m: any) => m.role === 'user').map((m: any) => m.text).join(' | '),
-            translated_text: extracted.translated_text,
-            language: extracted.language,
-            infrastructure_category: extracted.infrastructure_category,
-            ministry: extracted.ministry,
-            sentiment_score: extracted.sentiment_score,
-            urgency_level: 'medium',
-            status: 'pending',
-            channel: 'portal'
-          });
-        }
       } catch (e) {
-        console.error("Failed to extract and save complaint", e);
+        console.error("Failed to parse JSON response or save complaint", e);
+        // Fallback if parsing failed
+        responseText = "Thank you. We have forwarded your complaint to the concerned department.";
       }
     }
 

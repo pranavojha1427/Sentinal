@@ -21,6 +21,7 @@ export default function CitizenPortal() {
   // Chat State
   const [messages, setMessages] = useState<{role: "system" | "user", text: string}[]>([]);
   const [inputText, setInputText] = useState("");
+  const [isTyping, setIsTyping] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
@@ -114,6 +115,7 @@ export default function CitizenPortal() {
     setMessages(newMessages as any);
     const textToSend = inputText;
     setInputText("");
+    setIsTyping(true);
 
     try {
         let step = 1;
@@ -149,6 +151,8 @@ export default function CitizenPortal() {
         }
     } catch (e) {
         console.error("Chat error", e);
+    } finally {
+        setIsTyping(false);
     }
   };
 
@@ -259,6 +263,15 @@ export default function CitizenPortal() {
                 </div>
               ))}
             </div>
+                {isTyping && (
+                  <div className="flex justify-start">
+                    <div className="max-w-[80%] p-3 rounded-xl text-sm bg-white border border-slate-200 text-slate-500 rounded-bl-none flex space-x-1 items-center">
+                      <div className="w-2 h-2 bg-slate-300 rounded-full animate-bounce"></div>
+                      <div className="w-2 h-2 bg-slate-300 rounded-full animate-bounce" style={{animationDelay: "0.2s"}}></div>
+                      <div className="w-2 h-2 bg-slate-300 rounded-full animate-bounce" style={{animationDelay: "0.4s"}}></div>
+                    </div>
+                  </div>
+                )}
             
             {/* Input Area */}
             <div className="p-4 bg-white border-t border-slate-200">
