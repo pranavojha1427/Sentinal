@@ -27,8 +27,6 @@ export default function CitizenPortal() {
 
 
 
-  );
-
   const requestLocation = () => {
     if ("geolocation" in navigator) {
       navigator.geolocation.getCurrentPosition(
