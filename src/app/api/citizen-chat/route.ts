@@ -69,8 +69,19 @@ export async function POST(req: Request) {
 
     if (step === 2 && responseText) {
       try {
-        let cleanedText = responseText.replace(/```json/gi, '').replace(/```/g, '').trim();
-        const extracted = JSON.parse(cleanedText);
+        let cleanedText = responseText;
+        let extracted: any = {};
+        try {
+          const match = cleanedText.match(/\{[\s\S]*\}/);
+          if (match) {
+            extracted = JSON.parse(match[0]);
+          } else {
+            extracted = JSON.parse(cleanedText);
+          }
+        } catch(err) {
+          console.error("JSON parse error:", err, "Raw text:", responseText);
+          extracted = { replyToUser: "Thank you. We have forwarded your complaint to the concerned department." };
+        }
         responseText = extracted.replyToUser || extracted.reply_to_user || "Thank you. We have forwarded your complaint to the concerned department.";
         
         // Await the DB insert so Vercel doesn't kill the function before it saves
