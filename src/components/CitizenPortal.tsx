@@ -150,7 +150,7 @@ export default function CitizenPortal() {
             }).catch(e => console.error("API error", e));
 
             setTimeout(() => {
-                window.location.href = '/participatory-demand';
+                window.location.href = '/dashboard';
             }, 7000);
         }
     } catch (e) {
