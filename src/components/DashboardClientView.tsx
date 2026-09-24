@@ -396,7 +396,7 @@ export function DashboardClientView({ allProjects, agencyData, benchResData, ale
                   </li>
                   <li className="flex items-start">
                     <span className="h-2 w-2 mt-1.5 mr-2 rounded-full bg-red-500 flex-shrink-0"></span>
-                    <span>When 5+ complaints of the same category cluster within 5km, a <strong className="text-slate-800">Red Polygon Hotspot</strong> is formed via PostGIS DBSCAN.</span>
+                    <span>When 2+ complaints of the same category cluster within 8km, a <strong className="text-slate-800">Red Polygon Hotspot</strong> is formed via PostGIS DBSCAN.</span>
                   </li>
                   <li className="flex items-start">
                     <span className="h-2 w-2 mt-1.5 mr-2 rounded-full bg-green-500 flex-shrink-0"></span>
