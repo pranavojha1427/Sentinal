@@ -4,8 +4,11 @@ import { useState, useEffect } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import { getAIHealthScores } from "@/app/actions";
-import { Loader2, Sparkles } from "lucide-react";
+import { Loader2, MessageSquare, ShieldCheck, FileCheck } from "lucide-react";
+import { supabase } from "@/lib/supabaseClient";
 
 export function ProjectTableAI({ projects }: { projects: any[] }) {
   const [aiScores, setAiScores] = useState<Record<string, any>>({});
@@ -13,6 +16,15 @@ export function ProjectTableAI({ projects }: { projects: any[] }) {
   const [hasFailed, setHasFailed] = useState(false);
   const [selectedProject, setSelectedProject] = useState<any | null>(null);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
+
+  // Feedback State
+  const [feedbackProject, setFeedbackProject] = useState<any | null>(null);
+  const [feedbackStep, setFeedbackStep] = useState(0);
+  const [mobileNo, setMobileNo] = useState("");
+  const [otp, setOtp] = useState("");
+  const [feedbackText, setFeedbackText] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [feedbackError, setFeedbackError] = useState("");
 
   const fetchScores = async () => {
     setLoading(true);
@@ -27,7 +39,6 @@ export function ProjectTableAI({ projects }: { projects: any[] }) {
           setLoading(false);
           return;
         }
-        // Empty scores means backend was unreachable — retry
         if (attempt < maxRetries) {
           await new Promise(r => setTimeout(r, 2000));
         }
@@ -38,7 +49,6 @@ export function ProjectTableAI({ projects }: { projects: any[] }) {
         }
       }
     }
-    // All retries exhausted
     setHasFailed(true);
     setLoading(false);
   };
@@ -64,6 +74,68 @@ export function ProjectTableAI({ projects }: { projects: any[] }) {
       default:
         return <Badge className="bg-slate-200 text-slate-700 rounded-none uppercase">{health}</Badge>;
     }
+  };
+
+  const handleSendOTP = () => {
+    if (mobileNo.length < 10) {
+      setFeedbackError("Please enter a valid 10-digit mobile number.");
+      return;
+    }
+    setFeedbackError("");
+    setFeedbackStep(1); // Proceed to OTP
+  };
+
+  const handleVerifyOTP = () => {
+    if (otp.length < 4) {
+      setFeedbackError("Please enter the verification code.");
+      return;
+    }
+    setFeedbackError("");
+    setFeedbackStep(2); // Proceed to Feedback text
+  };
+
+  const handleSubmitFeedback = async () => {
+    if (!feedbackText.trim()) {
+      setFeedbackError("Please provide your feedback.");
+      return;
+    }
+    
+    setIsSubmitting(true);
+    setFeedbackError("");
+
+    try {
+      const { error } = await supabase.from("project_feedbacks").insert({
+        project_id: feedbackProject.id,
+        mobile_no: mobileNo,
+        feedback_text: feedbackText
+      });
+
+      if (error) {
+        if (error.code === '23505') { // Unique violation
+          setFeedbackError("Feedback from this mobile number has already been registered for this project.");
+        } else {
+          setFeedbackError("An error occurred. Please try again.");
+        }
+        setIsSubmitting(false);
+        return;
+      }
+
+      setFeedbackStep(3); // Success
+    } catch (e) {
+      console.error(e);
+      setFeedbackError("Unexpected error occurred.");
+    }
+    
+    setIsSubmitting(false);
+  };
+
+  const closeFeedbackModal = () => {
+    setFeedbackProject(null);
+    setFeedbackStep(0);
+    setMobileNo("");
+    setOtp("");
+    setFeedbackText("");
+    setFeedbackError("");
   };
 
   return (
@@ -96,7 +168,8 @@ export function ProjectTableAI({ projects }: { projects: any[] }) {
             <TableHead className="text-slate-600 font-mono text-right py-4">Rev. Cost</TableHead>
             <TableHead className="text-slate-600 font-mono text-right py-4">Overrun %</TableHead>
             <TableHead className="text-slate-600 font-mono text-right py-4">Discrepancy</TableHead>
-            <TableHead className="text-slate-600 font-mono text-right py-4">AI Health Score</TableHead>
+            <TableHead className="text-slate-600 font-mono text-center py-4">AI Health Score</TableHead>
+            <TableHead className="text-slate-600 font-mono text-center py-4">Action</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -129,8 +202,22 @@ export function ProjectTableAI({ projects }: { projects: any[] }) {
                     {p.implementationDiscrepancy > 0 ? '+' : ''}{p.implementationDiscrepancy.toFixed(1)}%
                   </span>
                 </TableCell>
-                <TableCell className="text-right font-mono">
+                <TableCell className="text-center font-mono">
                   {getHealthBadge(aiData?.overall_health)}
+                </TableCell>
+                <TableCell className="text-center font-mono">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="font-sans flex items-center gap-2 border-indigo-200 text-indigo-700 hover:bg-indigo-50"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setFeedbackProject(p);
+                      setFeedbackStep(0);
+                    }}
+                  >
+                    <MessageSquare className="w-4 h-4" /> Add Feedback
+                  </Button>
                 </TableCell>
               </TableRow>
             );
@@ -138,6 +225,7 @@ export function ProjectTableAI({ projects }: { projects: any[] }) {
         </TableBody>
       </Table>
 
+      {/* AI Risk Report Sheet */}
       <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
         <SheetContent className="bg-slate-50 border-l-2 border-slate-300 text-slate-900 overflow-y-auto sm:max-w-md w-full font-sans">
           <SheetHeader className="border-b border-slate-200 pb-4 mb-4">
@@ -205,6 +293,105 @@ export function ProjectTableAI({ projects }: { projects: any[] }) {
           )}
         </SheetContent>
       </Sheet>
+
+      {/* Add Feedback Dialog */}
+      <Dialog open={!!feedbackProject} onOpenChange={(open) => !open && closeFeedbackModal()}>
+        <DialogContent className="sm:max-w-md bg-white border border-slate-200 shadow-xl">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-semibold text-slate-800">
+              {feedbackStep === 3 ? "Feedback Submitted!" : "Submit Project Feedback"}
+            </DialogTitle>
+            <DialogDescription className="text-slate-500">
+              {feedbackProject?.project_name}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="py-4">
+            {feedbackError && (
+              <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg">
+                {feedbackError}
+              </div>
+            )}
+
+            {feedbackStep === 0 && (
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Mobile Number</label>
+                  <input 
+                    type="tel" 
+                    value={mobileNo}
+                    onChange={(e) => setMobileNo(e.target.value)}
+                    placeholder="Enter your 10-digit mobile number"
+                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
+                  />
+                </div>
+                <p className="text-xs text-slate-500">We will send a one-time verification code to this number.</p>
+              </div>
+            )}
+
+            {feedbackStep === 1 && (
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Verification Code</label>
+                  <input 
+                    type="text" 
+                    value={otp}
+                    onChange={(e) => setOtp(e.target.value)}
+                    placeholder="Enter the 6-digit code"
+                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition text-center tracking-widest font-mono text-lg"
+                    maxLength={6}
+                  />
+                </div>
+                <p className="text-xs text-slate-500 text-center">Code sent to +91 {mobileNo}</p>
+              </div>
+            )}
+
+            {feedbackStep === 2 && (
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Your Feedback</label>
+                  <textarea 
+                    value={feedbackText}
+                    onChange={(e) => setFeedbackText(e.target.value)}
+                    placeholder="Describe your observations, concerns, or feedback regarding this project..."
+                    className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition min-h-[120px] resize-none"
+                  />
+                </div>
+              </div>
+            )}
+
+            {feedbackStep === 3 && (
+              <div className="flex flex-col items-center justify-center py-6 text-center space-y-4">
+                <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mb-2">
+                  <FileCheck className="w-8 h-8" />
+                </div>
+                <p className="text-slate-600 text-sm">
+                  Your feedback has been recorded securely and will be reviewed by the admin and respective ministry.
+                </p>
+                <p className="text-xs text-slate-400 font-mono mt-2">Verified Mobile: +91 {mobileNo}</p>
+              </div>
+            )}
+          </div>
+
+          <DialogFooter className="sm:justify-between border-t border-slate-100 pt-4">
+            {feedbackStep < 3 ? (
+              <>
+                <Button variant="ghost" onClick={closeFeedbackModal} className="text-slate-500 hover:text-slate-700">Cancel</Button>
+                {feedbackStep === 0 && <Button onClick={handleSendOTP} className="bg-indigo-600 hover:bg-indigo-700 text-white">Send OTP</Button>}
+                {feedbackStep === 1 && <Button onClick={handleVerifyOTP} className="bg-indigo-600 hover:bg-indigo-700 text-white"><ShieldCheck className="w-4 h-4 mr-2"/> Verify Code</Button>}
+                {feedbackStep === 2 && (
+                  <Button onClick={handleSubmitFeedback} disabled={isSubmitting} className="bg-emerald-600 hover:bg-emerald-700 text-white">
+                    {isSubmitting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+                    Submit Feedback
+                  </Button>
+                )}
+              </>
+            ) : (
+              <Button onClick={closeFeedbackModal} className="w-full bg-slate-800 hover:bg-slate-900 text-white">Close</Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
