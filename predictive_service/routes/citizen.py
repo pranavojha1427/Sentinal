@@ -1,11 +1,12 @@
 import os
 import hashlib
-from fastapi import APIRouter, HTTPException, BackgroundTasks
+from fastapi import APIRouter, HTTPException, BackgroundTasks, Request
 from pydantic import BaseModel
 from supabase import create_client, Client
 import json
 from dotenv import load_dotenv
 from groq import Groq
+from typing import List, Dict, Any
 
 load_dotenv() # Load variables from .env
 
@@ -25,6 +26,36 @@ class CitizenComplaintRequest(BaseModel):
     lon: float
     raw_text: str
     language: str = "en"
+
+class ChatRequest(BaseModel):
+    step: int
+    messages: List[Dict[str, str]]
+
+@router.post("/chat")
+async def chat_endpoint(req: ChatRequest):
+    if not groq_client:
+        return {"text": "Thank you. We have forwarded your complaint to the concerned department."}
+        
+    try:
+        prompt = ""
+        if req.step == 1:
+            prompt = "You are a helpful assistant for the PragatiPulse Citizen Participation Portal. The user has just reported a problem regarding public infrastructure. Acknowledge their issue briefly in the EXACT SAME LANGUAGE they used, and ask them for one more detail (like exact location or severity). Do not solve the problem, just ask for details. Keep it to 1-2 sentences. DO NOT use English unless the user used English."
+        else:
+            prompt = "You are a helpful assistant for the PragatiPulse Citizen Participation Portal. The user has provided more details about their infrastructure problem. Analyze their complaint and determine which specific Indian Government Ministry or Department is responsible (e.g., 'Ministry of Road Transport and Highways', 'Municipal Corporation', 'Water Board', etc.). Then, reply in the EXACT SAME LANGUAGE they used. Thank them and explicitly state which department their complaint has been forwarded to. Keep it to 1-3 sentences. DO NOT use English unless the user used English."
+
+        payload_messages = [{"role": "system", "content": prompt}]
+        for m in req.messages:
+            payload_messages.append({"role": m["role"], "content": m["text"]})
+
+        completion = groq_client.chat.completions.create(
+            model="llama3-8b-8192",
+            messages=payload_messages,
+            temperature=0.3
+        )
+        return {"text": completion.choices[0].message.content}
+    except Exception as e:
+        print("Chat Error:", e)
+        return {"text": "Thank you. We have forwarded your complaint to the concerned department."}
 
 def process_complaint_and_cluster(hashed_phone: str, req: CitizenComplaintRequest):
     if not groq_client:
@@ -51,7 +82,7 @@ def process_complaint_and_cluster(hashed_phone: str, req: CitizenComplaintReques
     
     try:
         completion = groq_client.chat.completions.create(
-            model="llama-3.1-8b-instant",
+            model="llama3-8b-8192",
             messages=[{"role": "user", "content": prompt}],
             temperature=0.1
         )

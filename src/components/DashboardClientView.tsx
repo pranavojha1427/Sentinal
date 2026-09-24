@@ -1,3 +1,4 @@
+import ViewComplaints from "@/components/ViewComplaints";
 "use client";
 
 import { useState, useMemo, useEffect, Suspense } from "react";
@@ -25,6 +26,7 @@ const sectors = [
 const TAB_ITEMS = [
   { id: "dashboard", label: "Dashboard" },
   { id: "proposals", label: "Bidding / Project Addition" },
+  { id: "complaints", label: "View Complaints" },
   { id: "my-projects", label: "My Projects" },
   { id: "participatory", label: "Participatory Priority Engine" },
   { id: "agency", label: "Agency Leaderboard" },
@@ -209,7 +211,7 @@ export function DashboardClientView({ allProjects, agencyData, benchResData, ale
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 w-full">
             <p className="text-slate-600 font-mono text-sm uppercase">Infrastructure Project Monitoring Platform</p>
             <div className="flex flex-wrap items-center gap-3">
-              <a href="/pulse" className="text-xs font-mono uppercase bg-indigo-600 text-white px-4 py-2 hover:bg-indigo-700 transition-colors font-bold shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] border border-black whitespace-nowrap">Add Complaint</a>
+              {!currentUser && <a href="/pulse" className="text-xs font-mono uppercase bg-indigo-600 text-white px-4 py-2 hover:bg-indigo-700 transition-colors font-bold shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] border border-black whitespace-nowrap">Add Complaint</a>}
               
               {currentUser ? (
                 <>
@@ -231,7 +233,7 @@ export function DashboardClientView({ allProjects, agencyData, benchResData, ale
 
       {/* Tab Navigation */}
       <div className="flex gap-1 border-b border-slate-200 mb-8 overflow-x-auto">
-        {TAB_ITEMS.filter(tab => !currentUser ? (tab.id === 'dashboard') : ((tab.id !== 'my-projects' || currentUser?.role === 'agency') && (tab.id !== 'agency' || currentUser?.role !== 'agency'))).concat(currentUser?.role === 'admin' ? [{ id: 'accounts', label: 'Accounts' }] : []).map((tab) => (
+        {TAB_ITEMS.filter(tab => !currentUser ? (tab.id === 'dashboard' || tab.id === 'complaints') : ((tab.id !== 'my-projects' || currentUser?.role === 'agency') && (tab.id !== 'agency' || currentUser?.role !== 'agency'))).concat(currentUser?.role === 'admin' ? [{ id: 'accounts', label: 'Accounts' }] : []).map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
@@ -368,11 +370,17 @@ export function DashboardClientView({ allProjects, agencyData, benchResData, ale
       )}
       
 
+      {activeTab === "complaints" && (
+        <div className="p-6 bg-slate-50 border border-slate-200 shadow-sm">
+          <ViewComplaints />
+        </div>
+      )}
+
       {activeTab === "accounts" && currentUser?.role === "admin" ? (
         <AdminAccountManager />
       ) : activeTab === "my-projects" && currentUser?.role === "agency" ? (
         <AgencyProjectManager projects={allProjects.filter((p: any) => p.agency === currentUser?.agency && !p.is_completed)} agency={currentUser?.agency!} />
-      ) : activeTab !== "dashboard" && activeTab !== "proposals" && (
+      ) : activeTab !== "dashboard" && activeTab !== "proposals" && activeTab !== "complaints" && (
         <AnalyticsTabs
           activeTab={activeTab}
           agencyData={agencyData}

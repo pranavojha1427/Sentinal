@@ -74,6 +74,17 @@ export async function POST(req: Request) {
         
         // Await the DB insert so Vercel doesn't kill the function before it saves
         let locationStr = location ? `POINT(${location.lon} ${location.lat})` : null;
+        let state = "Unknown";
+        if (location) {
+          try {
+            const geoRes = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${location.lat}&lon=${location.lon}`);
+            const geoData = await geoRes.json();
+            state = geoData.address?.state || "Unknown";
+          } catch(e) {
+            console.error("Geocoding failed", e);
+          }
+        }
+
         const { error: dbError } = await supabase.from('citizen_requests').insert({
           hashed_phone: mobile || 'anonymous',
           location: locationStr,
@@ -85,7 +96,8 @@ export async function POST(req: Request) {
           sentiment_score: extracted.sentiment_score,
           urgency_level: 'medium',
           status: 'pending',
-          channel: 'portal'
+          channel: 'portal',
+          state: state
         });
         if (dbError) console.error("Supabase insert error", dbError);
         

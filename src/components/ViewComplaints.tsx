@@ -1,0 +1,98 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { createClient } from "@supabase/supabase-js";
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
+
+export default function ViewComplaints() {
+  const [complaints, setComplaints] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedState, setSelectedState] = useState<string>("All States");
+  const [states, setStates] = useState<string[]>([]);
+
+  useEffect(() => {
+    async function fetchComplaints() {
+      const { data, error } = await supabase
+        .from('citizen_requests')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (!error && data) {
+        setComplaints(data);
+        const uniqueStates = Array.from(new Set(data.map(d => d.state).filter(Boolean)));
+        setStates(["All States", ...uniqueStates]);
+      }
+      setLoading(false);
+    }
+    fetchComplaints();
+  }, []);
+
+  const filteredComplaints = selectedState === "All States" 
+    ? complaints 
+    : complaints.filter(c => c.state === selectedState);
+
+  return (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center mb-6">
+        <div>
+          <h2 className="text-2xl font-bold text-slate-800">View Complaints</h2>
+          <p className="text-sm text-slate-500">Monitor citizen infrastructure demands across different regions.</p>
+        </div>
+        <select 
+          className="border border-slate-300 rounded px-4 py-2 text-sm bg-white"
+          value={selectedState}
+          onChange={(e) => setSelectedState(e.target.value)}
+        >
+          {states.map(state => (
+            <option key={state} value={state}>{state}</option>
+          ))}
+        </select>
+      </div>
+
+      {loading ? (
+        <div className="text-slate-500 animate-pulse text-center py-10">Loading complaints...</div>
+      ) : (
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+          <table className="w-full text-left border-collapse text-sm">
+            <thead>
+              <tr className="bg-slate-50 border-b border-slate-200 text-slate-600">
+                <th className="p-4 font-semibold w-1/4">Infrastructure Category</th>
+                <th className="p-4 font-semibold w-1/2">Complaint Description</th>
+                <th className="p-4 font-semibold">State</th>
+                <th className="p-4 font-semibold">Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredComplaints.length === 0 ? (
+                <tr>
+                  <td colSpan={4} className="p-8 text-center text-slate-500">
+                    No complaints found for the selected state.
+                  </td>
+                </tr>
+              ) : (
+                filteredComplaints.map((c: any) => (
+                  <tr key={c.id} className="border-b border-slate-100 hover:bg-slate-50">
+                    <td className="p-4">
+                      <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs font-semibold">
+                        {c.infrastructure_category || 'Unknown'}
+                      </span>
+                    </td>
+                    <td className="p-4 text-slate-700">{c.translated_text || c.raw_text}</td>
+                    <td className="p-4 text-slate-600">{c.state || 'Unknown'}</td>
+                    <td className="p-4 text-slate-500">
+                      {new Date(c.created_at).toLocaleDateString()}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}

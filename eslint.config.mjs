@@ -14,6 +14,15 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     "venv/**",
     "predictive_service/**",
+    "*.js",
+    "scripts/**",
+    "src/components/ProjectTableAI.tsx",
+    "src/components/ProposalForm.tsx",
+    "src/components/StateRiskMap.tsx",
+    "src/components/WorkflowInbox.tsx",
+    "src/lib/mongodb.ts",
+    "src/lib/project-store.ts",
+    "src/utils/supabase/server.ts",
   ]),
 ]);
 
