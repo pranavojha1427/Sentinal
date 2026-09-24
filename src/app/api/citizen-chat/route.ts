@@ -72,9 +72,9 @@ export async function POST(req: Request) {
         const extracted = JSON.parse(responseText);
         responseText = extracted.replyToUser;
         
-        // Use edge background execution for the DB insert so we don't block the UI response
+        // Await the DB insert so Vercel doesn't kill the function before it saves
         let locationStr = location ? `POINT(${location.lon} ${location.lat})` : null;
-        supabase.from('citizen_requests').insert({
+        const { error: dbError } = await supabase.from('citizen_requests').insert({
           hashed_phone: mobile || 'anonymous',
           location: locationStr,
           raw_text: messages.filter((m: any) => m.role === 'user').map((m: any) => m.text).join(' | '),
@@ -86,7 +86,8 @@ export async function POST(req: Request) {
           urgency_level: 'medium',
           status: 'pending',
           channel: 'portal'
-        }).then(({error}) => { if(error) console.error("Supabase insert error", error); });
+        });
+        if (dbError) console.error("Supabase insert error", dbError);
         
       } catch (e) {
         console.error("Failed to parse JSON response or save complaint", e);
