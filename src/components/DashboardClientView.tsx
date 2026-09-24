@@ -1,5 +1,5 @@
-import ViewComplaints from "@/components/ViewComplaints";
 "use client";
+import ViewComplaints from "@/components/ViewComplaints";
 
 import { useState, useMemo, useEffect, Suspense } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
