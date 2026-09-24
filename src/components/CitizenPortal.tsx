@@ -13,45 +13,21 @@ declare global {
 }
 
 export default function CitizenPortal() {
-  const [step, setStep] = useState<"login" | "menu" | "complaint" | "feedback">("login");
+  const [step, setStep] = useState<"login" | "otp" | "menu" | "complaint" | "feedback">("login");
   const [mobile, setMobile] = useState("");
+  const [otp, setOtp] = useState("");
   const [location, setLocation] = useState<{lat: number, lon: number} | null>(null);
   
   // Chat State
   const [messages, setMessages] = useState<{role: "system" | "user", text: string}[]>([]);
   const [inputText, setInputText] = useState("");
   const [isRecording, setIsRecording] = useState(false);
-  const recognitionRef = useRef<any>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
 
-  // Projects (for feedback)
-  const [nearbyProjects, setNearbyProjects] = useState<any[]>([]);
 
-  useEffect(() => {
-    // Initialize Speech Recognition
-    if (typeof window !== "undefined") {
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      if (SpeechRecognition) {
-        const recognition = new SpeechRecognition();
-        recognition.continuous = false;
-        recognition.interimResults = true;
-        recognition.lang = "hi-IN"; // Default to Hindi, can be changed
-        
-        recognition.onresult = (event: any) => {
-          let transcript = "";
-          for (let i = event.resultIndex; i < event.results.length; ++i) {
-            transcript += event.results[i][0].transcript;
-          }
-          setInputText(transcript);
-        };
 
-        recognition.onend = () => {
-          setIsRecording(false);
-        };
-
-        recognitionRef.current = recognition;
-      }
-    }
-  }, []);
+  );
 
   const requestLocation = () => {
     if ("geolocation" in navigator) {
@@ -65,18 +41,70 @@ export default function CitizenPortal() {
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     if (mobile.length >= 10) {
+      setStep("otp");
+    }
+  };
+
+  const handleVerifyOtp = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (otp.length >= 4) {
       setStep("menu");
       requestLocation();
     }
   };
 
-  const toggleRecording = () => {
+  const toggleRecording = async () => {
     if (isRecording) {
-      recognitionRef.current?.stop();
+      mediaRecorderRef.current?.stop();
+      setIsRecording(false);
     } else {
-      setInputText("");
-      recognitionRef.current?.start();
-      setIsRecording(true);
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        const mediaRecorder = new MediaRecorder(stream);
+        mediaRecorderRef.current = mediaRecorder;
+        audioChunksRef.current = [];
+
+        mediaRecorder.ondataavailable = (event) => {
+          if (event.data.size > 0) {
+            audioChunksRef.current.push(event.data);
+          }
+        };
+
+        mediaRecorder.onstop = async () => {
+          const audioBlob = new Blob(audioChunksRef.current, { type: "audio/webm" });
+          const formData = new FormData();
+          formData.append("audio", audioBlob, "recording.webm");
+          
+          setInputText("Transcribing...");
+          try {
+            const res = await fetch("/api/transcribe", {
+              method: "POST",
+              body: formData
+            });
+            if (res.ok) {
+              const data = await res.json();
+              if (data.text) {
+                setInputText(data.text);
+              } else {
+                setInputText("");
+              }
+            } else {
+              setInputText("");
+              console.error("Failed to transcribe");
+            }
+          } catch (e) {
+            console.error(e);
+            setInputText("");
+          }
+          
+          stream.getTracks().forEach(track => track.stop());
+        };
+
+        mediaRecorder.start();
+        setIsRecording(true);
+      } catch (err) {
+        console.error("Microphone access denied", err);
+      }
     }
   };
 
@@ -98,7 +126,7 @@ export default function CitizenPortal() {
         const res = await fetch('/api/citizen-chat', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ messages: newMessages, step })
+            body: JSON.stringify({ messages: newMessages, step, location, mobile })
         });
         
         const data = await res.json();
@@ -126,40 +154,7 @@ export default function CitizenPortal() {
     }
   };
 
-  const loadNearbyProjects = async () => {
-    setStep("feedback");
-    try {
-        let query = supabase.from("projects").select("id, project_name, sector, state");
-        
-        if (location) {
-            // Reverse geocode to get the state
-            const geoRes = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${location.lat}&lon=${location.lon}`, {
-                headers: { 'User-Agent': 'PragatiPulse/1.0' }
-            });
-            const geoData = await geoRes.json();
-            const stateName = geoData.address?.state;
-            
-            if (stateName) {
-                // Filter by state name. Use ilike to handle minor casing differences
-                query = query.ilike("state", `%${stateName}%`);
-            }
-        }
-        
-        const { data } = await query.limit(5);
-        if (data && data.length > 0) {
-            setNearbyProjects(data);
-        } else {
-            // Fallback if no projects in their state, just get the first 5
-            const fallback = await supabase.from("projects").select("id, project_name, sector, state").limit(5);
-            if (fallback.data) setNearbyProjects(fallback.data);
-        }
-    } catch (e) {
-        console.error("Error loading nearby projects:", e);
-        // Fallback
-        const { data } = await supabase.from("projects").select("id, project_name, sector, state").limit(5);
-        if (data) setNearbyProjects(data);
-    }
-  };
+
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4">
@@ -167,7 +162,7 @@ export default function CitizenPortal() {
         
         {/* Header */}
         <div className="bg-indigo-600 p-6 text-white text-center relative">
-          {(step === "complaint" || step === "feedback") && (
+          {(step === "complaint") && (
             <button onClick={() => setStep("menu")} className="absolute left-4 top-6 text-indigo-100 hover:text-white">
               <ArrowLeft />
             </button>
@@ -202,6 +197,32 @@ export default function CitizenPortal() {
           </div>
         )}
 
+        {/* OTP Step */}
+        {step === "otp" && (
+          <div className="p-8 space-y-6">
+            <div className="text-center">
+              <h2 className="text-xl font-semibold text-slate-800">Verify Mobile</h2>
+              <p className="text-slate-500 text-sm mt-2">Code sent to {mobile}</p>
+            </div>
+            <form onSubmit={handleVerifyOtp} className="space-y-4">
+              <div>
+                <label className="text-xs font-semibold text-slate-500 uppercase">Verification Code</label>
+                <input 
+                  type="text" 
+                  value={otp}
+                  onChange={e => setOtp(e.target.value)}
+                  placeholder="Enter the 6-digit code" 
+                  className="w-full mt-1 p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none text-center tracking-widest text-lg"
+                  required
+                />
+              </div>
+              <button type="submit" className="w-full bg-indigo-600 text-white font-semibold py-3 rounded-lg hover:bg-indigo-700 transition">
+                Verify Code
+              </button>
+            </form>
+          </div>
+        )}
+
         {/* Main Menu Step */}
         {step === "menu" && (
           <div className="p-8 space-y-4">
@@ -223,19 +244,6 @@ export default function CitizenPortal() {
               <div className="ml-4">
                 <h3 className="font-semibold text-slate-800">Register Complaint</h3>
                 <p className="text-xs text-slate-500 mt-1">Report local infrastructure issues</p>
-              </div>
-            </button>
-
-            <button 
-              onClick={loadNearbyProjects}
-              className="w-full text-left p-4 border border-slate-200 hover:border-indigo-500 hover:bg-indigo-50 rounded-xl transition flex items-center group"
-            >
-              <div className="bg-emerald-100 p-3 rounded-lg text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white transition">
-                <MapPin className="w-6 h-6" />
-              </div>
-              <div className="ml-4">
-                <h3 className="font-semibold text-slate-800">Feedback on Projects</h3>
-                <p className="text-xs text-slate-500 mt-1">Review ongoing projects near you</p>
               </div>
             </button>
           </div>
@@ -292,32 +300,6 @@ export default function CitizenPortal() {
           </div>
         )}
 
-        {/* Feedback Step */}
-        {step === "feedback" && (
-          <div className="flex flex-col h-[500px]">
-             <div className="p-4 bg-slate-50 border-b border-slate-200">
-                <h3 className="font-semibold text-slate-800">Nearby Projects</h3>
-                <p className="text-xs text-slate-500">Based on your location</p>
-             </div>
-             <div className="flex-1 p-4 overflow-y-auto space-y-3">
-                {nearbyProjects.map(p => (
-                  <div key={p.id} className="bg-white border border-slate-200 p-4 rounded-xl hover:border-indigo-500 cursor-pointer">
-                    <div className="text-xs font-semibold text-indigo-600 uppercase mb-1">{p.sector} {p.state ? `• ${p.state}` : ""}</div>
-                    <div className="font-semibold text-slate-800 text-sm">{p.project_name}</div>
-                    <button 
-                      onClick={() => {
-                        setStep("complaint");
-                        setMessages([{ role: "system", text: `You can provide your feedback for "${p.project_name}" by speaking or typing in any language.` }]);
-                      }}
-                      className="mt-3 text-xs bg-slate-100 text-slate-700 px-3 py-1.5 rounded-lg hover:bg-slate-200 font-semibold flex items-center"
-                    >
-                      <Mic className="w-3 h-3 mr-1" /> Add Voice Feedback
-                    </button>
-                  </div>
-                ))}
-             </div>
-          </div>
-        )}
 
       </div>
     </div>
