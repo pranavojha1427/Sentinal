@@ -122,7 +122,7 @@ Answer using Markdown with tables if useful. Be analytical, professional, and cl
 Provide deep intelligence based solely on the provided project context.`;
 
     // 8. Fetch from Gemini AI (Google)
-    const res = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent", {
+    const res = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

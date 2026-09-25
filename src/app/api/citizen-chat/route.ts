@@ -41,14 +41,14 @@ export async function POST(req: Request) {
         payload.generationConfig.responseMimeType = responseMimeType;
       }
       
-      let res = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent", {
+      let res = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent", {
         method: "POST",
         headers: { "Content-Type": "application/json", "x-goog-api-key": process.env.GOOGLE_API_KEY! },
         body: JSON.stringify(payload)
       });
       if (res.status === 503) {
         await new Promise(r => setTimeout(r, 1000));
-        res = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent", {
+        res = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent", {
           method: "POST",
           headers: { "Content-Type": "application/json", "x-goog-api-key": process.env.GOOGLE_API_KEY! },
           body: JSON.stringify(payload)
