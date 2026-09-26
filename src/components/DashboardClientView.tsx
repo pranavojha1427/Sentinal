@@ -8,6 +8,8 @@ import { ProjectTableAI } from "@/components/ProjectTableAI";
 import StateRiskMap from "@/components/StateRiskMap";
 import { AnalyticsTabs } from "@/components/AnalyticsTabs";
 import { AdminAccountManager } from "@/components/AdminAccountManager";
+import AdminHotspots from "./AdminHotspots";
+import AdminInspectors from "./AdminInspectors";
 import { AgencyProjectManager } from "@/components/AgencyProjectManager";
 import { WorkflowInbox } from "@/components/WorkflowInbox";
 import { ProposalForm } from "@/components/ProposalForm";
@@ -376,7 +378,11 @@ export function DashboardClientView({ allProjects, agencyData, benchResData, ale
         </div>
       )}
 
-      {activeTab === "accounts" && currentUser?.role === "admin" ? (
+      {activeTab === "hotspots" && currentUser?.role === "admin" ? (
+        <AdminHotspots />
+      ) : activeTab === "inspectors" && currentUser?.role === "admin" ? (
+        <AdminInspectors />
+      ) : activeTab === "accounts" && currentUser?.role === "admin" ? (
         <AdminAccountManager />
       ) : activeTab === "my-projects" && currentUser?.role === "agency" ? (
         <AgencyProjectManager projects={allProjects.filter((p: any) => p.agency === currentUser?.agency && !p.is_completed)} agency={currentUser?.agency!} />
