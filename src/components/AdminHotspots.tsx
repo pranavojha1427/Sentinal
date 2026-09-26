@@ -2,9 +2,15 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabaseClient";
-import { Loader2, MapPin, AlertCircle, ShieldAlert, CheckCircle2 } from "lucide-react";
+import { Loader2, MapPin, AlertCircle, ShieldAlert, CheckCircle2, ChevronRight, FileText } from "lucide-react";
+import dynamic from "next/dynamic";
 
-export default function AdminHotspots() {
+const MapPicker = dynamic(() => import("@/components/InspectorMapPicker"), {
+  ssr: false,
+  loading: () => <div className="h-64 w-full bg-slate-100 animate-pulse flex items-center justify-center text-slate-400">Loading Map...</div>
+});
+
+export default function AdminHotspots({ currentUser }: { currentUser?: any }) {
   const [unassignedComplaints, setUnassignedComplaints] = useState<any[]>([]);
   const [hotspots, setHotspots] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -75,12 +81,51 @@ export default function AdminHotspots() {
     fetchData();
   };
 
+  const handleRaiseProject = async (hotspot: any) => {
+    // The Ministry raises a project from the Field Report
+    // It creates a MongoDB Proposal that goes to Admin
+    const project_title = prompt("Enter Project Title for this Initiative:");
+    if (!project_title) return;
+
+    // Fetch the project that was temporarily put into postgres by the inspector
+    const { data: pData } = await supabase.from('projects').select('*').eq('hml_category', hotspot.infrastructure_category).eq('state', hotspot.state).order('created_at', { ascending: false }).limit(1);
+
+    const description = hotspot.inspector_report || "Raised from Field Report";
+    const amountStr = prompt("Enter Estimated Budget (in Crores):", "50");
+    if (!amountStr) return;
+    const amount = parseFloat(amountStr) || 0;
+
+    const res = await fetch("/api/proposals", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            title: project_title,
+            description: description,
+            amount: amount,
+            category: hotspot.infrastructure_category,
+            location: hotspot.state,
+            timeline: "24 months",
+            hotspot_id: hotspot.id
+        })
+    });
+
+    if (res.ok) {
+        alert("Project Proposal sent to Admin for Bidding Verification!");
+        // Update hotspot status
+        await supabase.from('demand_hotspots').update({ status: 'project_raised' }).eq('id', hotspot.id);
+        fetchData();
+    } else {
+        alert("Failed to raise project.");
+    }
+  };
+
   if (loading) return <div className="p-12 text-center"><Loader2 className="w-8 h-8 animate-spin mx-auto text-indigo-500" /></div>;
 
   return (
     <div className="p-6 bg-slate-50 border border-slate-200 space-y-8">
       
-      {/* Potential Hotspots */}
+      {/* Potential Hotspots - Only Admin sees this */}
+      {currentUser?.role === 'admin' && (
       <div>
         <h2 className="text-2xl font-bold font-serif text-slate-800 flex items-center mb-1"><AlertCircle className="w-6 h-6 mr-2 text-rose-500" /> Detected Demand Hotspots</h2>
         <p className="text-slate-500 text-sm mb-6">Groups of similar citizen complaints awaiting inspector assignment.</p>
@@ -98,81 +143,92 @@ export default function AdminHotspots() {
                     <div className="text-slate-700 font-semibold mt-3 flex items-center"><MapPin className="w-4 h-4 mr-1 text-slate-400"/> {group.state} Region</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-3xl font-black text-slate-800">{group.complaints.length}</div>
-                    <div className="text-[10px] text-slate-500 uppercase font-bold tracking-wide">Complaints</div>
+                    <span className="text-3xl font-black text-slate-800">{group.complaints.length}</span>
+                    <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Complaints</div>
                   </div>
                 </div>
-                
-                <div className="text-sm text-slate-600 mb-6 bg-slate-50 p-3 rounded border border-slate-100 h-24 overflow-y-auto">
-                    {group.complaints.map((c: any, i: number) => (
-                        <div key={i} className="mb-2 pb-2 border-b border-slate-200 last:border-0 last:mb-0 last:pb-0">
-                            <span className="font-semibold text-slate-700">{c.name || 'Anonymous'}:</span> {c.translated_text || c.raw_text}
-                        </div>
-                    ))}
+
+                <div className="space-y-3 mt-6 border-t border-slate-100 pt-4 h-32 overflow-y-auto pr-2">
+                  {group.complaints.map((c: any) => (
+                    <div key={c.id} className="text-sm border-l-2 border-slate-200 pl-3">
+                      <span className="font-semibold text-slate-700">{c.citizen_name || 'Anonymous'}:</span> <span className="text-slate-600">{c.description}</span>
+                    </div>
+                  ))}
                 </div>
 
-                <button 
-                  onClick={() => handleCreateAndAssign(group)}
-                  className="w-full py-3 bg-slate-900 text-white font-semibold rounded-lg hover:bg-slate-800 transition flex items-center justify-center"
-                >
-                  <ShieldAlert className="w-4 h-4 mr-2" /> Make Hotspot & Assign Inspector
-                </button>
+                <div className="mt-6 pt-4 border-t border-slate-100">
+                  <button onClick={() => handleCreateAndAssign(group)} className="w-full py-3 bg-slate-900 text-white font-semibold rounded hover:bg-indigo-600 transition flex justify-center items-center">
+                    <ShieldAlert className="w-4 h-4 mr-2" /> Make Hotspot & Assign Inspector
+                  </button>
+                </div>
               </div>
             ))}
           </div>
         )}
       </div>
+      )}
 
-      {/* Active Hotspots / Assigned */}
+      {/* Active Assignments & Field Reports */}
       <div>
-        <h2 className="text-xl font-bold font-serif text-slate-800 mb-4 mt-12 border-t border-slate-200 pt-8">Active Assignments</h2>
-        
+        <h2 className="text-2xl font-bold font-serif text-slate-800 flex items-center mb-1">
+            <CheckCircle2 className="w-6 h-6 mr-2 text-emerald-500" /> 
+            {currentUser?.role === 'admin' ? "Active Assignments" : "Field Reports & Initiatives"}
+        </h2>
+        <p className="text-slate-500 text-sm mb-6">Track hotspots that are currently assigned to field inspectors or have proposed initiatives.</p>
+
         {hotspots.length === 0 ? (
-          <div className="p-8 text-center bg-white border border-slate-200 rounded text-slate-500">No active assignments.</div>
+          <div className="p-8 text-center bg-white border border-slate-200 rounded text-slate-500">No hotspots have been created yet.</div>
         ) : (
-          <div className="bg-white border border-slate-200 rounded shadow-sm overflow-hidden">
-            <table className="w-full text-left text-sm">
-                <thead>
-                  <tr className="bg-slate-50 border-b border-slate-200 text-slate-600">
-                    <th className="p-4 font-semibold">Hotspot ID</th>
-                    <th className="p-4 font-semibold">Location & Type</th>
-                    <th className="p-4 font-semibold">Assigned Inspector</th>
-                    <th className="p-4 font-semibold">Status</th>
-                    <th className="p-4 font-semibold">Inspector Report</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {hotspots.map(h => (
-                    <tr key={h.id} className="hover:bg-slate-50">
-                      <td className="p-4 font-mono text-xs text-slate-500">{h.id.split('-')[0]}</td>
-                      <td className="p-4">
-                        <div className="font-semibold text-slate-800">{h.infrastructure_category}</div>
-                        <div className="text-xs text-slate-500">{h.state}</div>
-                      </td>
-                      <td className="p-4">
-                        {h.inspectors ? (
-                            <div>
-                                <div className="font-semibold text-indigo-700">{h.inspectors.name}</div>
-                                <div className="text-xs text-slate-500">{h.inspectors.phone}</div>
-                            </div>
-                        ) : <span className="text-slate-400 italic">Unassigned</span>}
-                      </td>
-                      <td className="p-4">
-                        <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                            h.status === 'project_proposed' ? 'bg-emerald-100 text-emerald-700' :
-                            h.status === 'examined' ? 'bg-blue-100 text-blue-700' :
-                            'bg-amber-100 text-amber-700'
-                        }`}>
-                            {h.status.replace('_', ' ').toUpperCase()}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+             {hotspots.map((h) => {
+                // If ministry, only show those that are proposed
+                if (currentUser?.role === 'ministry' && h.status !== 'project_proposed' && h.status !== 'project_raised') return null;
+
+                return (
+                 <div key={h.id} className="bg-white p-6 border border-slate-200 shadow-sm rounded-lg relative overflow-hidden">
+                    <div className={`absolute top-0 left-0 w-1 h-full ${h.status === 'project_proposed' ? 'bg-emerald-500' : h.status === 'project_raised' ? 'bg-indigo-500' : 'bg-amber-500'}`}></div>
+                    <div className="flex justify-between items-start mb-4">
+                        <div>
+                        <span className="text-xs font-bold px-2 py-1 bg-slate-100 text-slate-700 rounded-full">{h.infrastructure_category}</span>
+                        <div className="text-slate-700 font-semibold mt-3 flex items-center"><MapPin className="w-4 h-4 mr-1 text-slate-400"/> {h.state} Region</div>
+                        </div>
+                        <div className="text-right">
+                        <div className="text-xs font-mono text-slate-400 mb-1">ID: {h.id.split('-')[0]}</div>
+                        <span className={`text-[10px] font-bold px-2 py-1 rounded-full uppercase ${h.status === 'project_proposed' ? 'bg-emerald-100 text-emerald-700' : h.status === 'project_raised' ? 'bg-indigo-100 text-indigo-700' : 'bg-amber-100 text-amber-700'}`}>
+                            {h.status.replace('_', ' ')}
                         </span>
-                      </td>
-                      <td className="p-4 text-xs text-slate-600 max-w-xs truncate">
-                        {h.inspector_report ? h.inspector_report : <span className="text-slate-400 italic">Awaiting field report...</span>}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-            </table>
+                        </div>
+                    </div>
+
+                    <div className="mt-4 p-4 bg-slate-50 border border-slate-100 rounded text-sm space-y-2">
+                        <div className="flex justify-between">
+                            <span className="text-slate-500">Citizen Requests:</span>
+                            <span className="font-bold text-slate-700">{h.request_count}</span>
+                        </div>
+                        {currentUser?.role === 'admin' && h.inspectors && (
+                        <div className="flex justify-between">
+                            <span className="text-slate-500">Inspector:</span>
+                            <span className="font-semibold text-slate-700">{h.inspectors.name}</span>
+                        </div>
+                        )}
+                        {h.inspector_report && (
+                            <div className="mt-4 pt-4 border-t border-slate-200">
+                                <span className="text-xs font-bold text-emerald-600 uppercase mb-1 block flex items-center"><FileText className="w-3 h-3 mr-1"/> Inspector Report</span>
+                                <p className="text-slate-600 text-sm italic">"{h.inspector_report}"</p>
+                            </div>
+                        )}
+                    </div>
+
+                    {currentUser?.role === 'ministry' && h.status === 'project_proposed' && (
+                        <div className="mt-6 pt-4 border-t border-slate-100">
+                            <button onClick={() => handleRaiseProject(h)} className="w-full py-3 bg-indigo-600 text-white font-semibold rounded hover:bg-indigo-700 transition flex justify-center items-center">
+                                Raise Project Proposal
+                            </button>
+                        </div>
+                    )}
+                 </div>
+                );
+             })}
           </div>
         )}
       </div>
