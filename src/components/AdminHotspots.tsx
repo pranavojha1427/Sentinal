@@ -103,7 +103,7 @@ export default function AdminHotspots({ currentUser }: { currentUser?: any }) {
             description: description,
             amount: amount,
             category: hotspot.infrastructure_category,
-            location: hotspot.state,
+            location: hotspot.exact_lat && hotspot.exact_lng ? `${hotspot.state} (${Number(hotspot.exact_lat).toFixed(4)}, ${Number(hotspot.exact_lng).toFixed(4)})` : hotspot.state,
             timeline: "24 months",
             hotspot_id: hotspot.id
         })
@@ -214,7 +214,13 @@ export default function AdminHotspots({ currentUser }: { currentUser?: any }) {
                         {h.inspector_report && (
                             <div className="mt-4 pt-4 border-t border-slate-200">
                                 <span className="text-xs font-bold text-emerald-600 uppercase mb-1 block flex items-center"><FileText className="w-3 h-3 mr-1"/> Inspector Report</span>
-                                <p className="text-slate-600 text-sm italic">"{h.inspector_report}"</p>
+                                <p className="text-slate-600 text-sm italic mb-3">"{h.inspector_report}"</p>
+                                {h.exact_lat && h.exact_lng && (
+                                    <div className="bg-slate-100 p-2 rounded text-xs font-mono flex items-center text-slate-700">
+                                        <MapPin className="w-3 h-3 mr-1 text-rose-500" />
+                                        Exact Location Pinned: {Number(h.exact_lat).toFixed(6)}, {Number(h.exact_lng).toFixed(6)}
+                                    </div>
+                                )}
                             </div>
                         )}
                     </div>
