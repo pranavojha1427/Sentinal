@@ -234,21 +234,56 @@ export function DashboardClientView({ allProjects, agencyData, benchResData, ale
       </div>
 
       {/* Tab Navigation */}
-      <div className="flex gap-1 border-b border-slate-200 mb-8 overflow-x-auto">
-        {TAB_ITEMS.filter(tab => !currentUser ? (tab.id === 'dashboard' || tab.id === 'complaints') : ((tab.id !== 'my-projects' || currentUser?.role === 'agency') && (tab.id !== 'agency' || currentUser?.role !== 'agency'))).concat(currentUser?.role === 'admin' ? [{ id: 'hotspots', label: 'Hotspots' }, { id: 'inspectors', label: 'Inspectors' }, { id: 'accounts', label: 'Accounts' }] : currentUser?.role === 'ministry' ? [{ id: 'hotspots', label: 'Field Reports' }] : []).map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={`px-5 py-3 font-mono text-sm uppercase tracking-wide transition-colors whitespace-nowrap ${
-              activeTab === tab.id
-                ? "text-slate-900 border-b-2 border-emerald-500 bg-slate-200/50"
-                : "text-slate-500 hover:text-slate-700 hover:bg-slate-200/30"
-            }`}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
+        <div className="flex gap-1 border-b border-slate-200 mb-8 overflow-x-auto">
+          {(() => {
+             const tabs = [];
+             if (!currentUser) {
+                 tabs.push({ id: 'dashboard', label: 'Overview' }, { id: 'complaints', label: 'Complaints' });
+             } else if (currentUser.role === 'admin') {
+                 // Central Admin
+                 tabs.push(
+                     { id: 'dashboard', label: 'Participatory Priority Engine (Dashboard)' },
+                     { id: 'accounts', label: 'Accounts (State Admins & Agencies)' }
+                 );
+             } else if (currentUser.role === 'state_admin') {
+                 // State Admin
+                 tabs.push(
+                     { id: 'dashboard', label: 'State Priority Engine' },
+                     { id: 'hotspots', label: 'Hotspots' },
+                     { id: 'inspectors', label: 'Inspectors' },
+                     { id: 'proposals', label: 'Bidding / Proposals' },
+                     { id: 'accounts', label: 'Accounts (Ministries)' }
+                 );
+             } else if (currentUser.role === 'ministry') {
+                 tabs.push(
+                     { id: 'dashboard', label: 'Dashboard' },
+                     { id: 'hotspots', label: 'Field Reports' },
+                     { id: 'proposals', label: 'Proposals' },
+                     { id: 'complaints', label: 'Complaints' }
+                 );
+             } else if (currentUser.role === 'agency') {
+                 tabs.push(
+                     { id: 'dashboard', label: 'Dashboard' },
+                     { id: 'proposals', label: 'Bidding' },
+                     { id: 'my-projects', label: 'My Projects' },
+                     { id: 'complaints', label: 'Complaints' }
+                 );
+             }
+             return tabs.map(tab => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`px-4 py-2 font-semibold text-sm transition-colors whitespace-nowrap ${
+                    activeTab === tab.id
+                      ? "border-b-2 border-slate-900 text-slate-900"
+                      : "text-slate-500 hover:text-slate-700"
+                  }`}
+                >
+                  {tab.label}
+                </button>
+             ));
+          })()}
+        </div>
 
       {/* ── Tab Content ── */}
       {activeTab === "dashboard" && (
@@ -378,11 +413,11 @@ export function DashboardClientView({ allProjects, agencyData, benchResData, ale
         </div>
       )}
 
-      {activeTab === "hotspots" && (currentUser?.role === "admin" || currentUser?.role === "ministry") ? (
+      {activeTab === "hotspots" && (currentUser?.role === "state_admin" || currentUser?.role === "ministry") ? (
         <AdminHotspots currentUser={currentUser} />
-      ) : activeTab === "inspectors" && currentUser?.role === "admin" ? (
-        <AdminInspectors />
-      ) : activeTab === "accounts" && currentUser?.role === "admin" ? (
+      ) : activeTab === "inspectors" && currentUser?.role === "state_admin" ? (
+        <AdminInspectors currentUser={currentUser} />
+      ) : activeTab === "accounts" && (currentUser?.role === "admin" || currentUser?.role === "state_admin") ? (
         <AdminAccountManager />
       ) : activeTab === "my-projects" && currentUser?.role === "agency" ? (
         <AgencyProjectManager projects={allProjects.filter((p: any) => p.agency === currentUser?.agency && !p.is_completed)} agency={currentUser?.agency!} />

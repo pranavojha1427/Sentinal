@@ -17,7 +17,9 @@ export async function GET() {
     query = { $or: [{ ministry: new RegExp(`^${session.ministry}$`, "i") }, { createdBy: session.id }] };
   } else if (session.role === "agency" && session.agency) {
     query = { $or: [{ agency: session.agency }, { status: "bidding_open" }] };
-  } else if (session.role !== "admin") {
+  } else if (session.role === "state_admin" && session.state) {
+    query = { state: session.state };
+  } else if (session.role !== "admin" && session.role !== "state_admin") {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -79,7 +81,7 @@ export async function PUT(req: Request) {
 
   if (action === "dismiss" && proposal.createdBy === session.id) {
     newStatus = "dismissed";
-  } else if (session.role === "admin") {
+  } else if (session.role === "state_admin") {
     if (action === "approve") {
       if (proposal.type === "agency_proposal") {
         newStatus = "pending_ministry";

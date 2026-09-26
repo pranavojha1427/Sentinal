@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { UserPlus, Shield, Loader2, MapPin, Briefcase, Phone, Hash } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 
-export default function AdminInspectors() {
+export default function AdminInspectors({ currentUser }: { currentUser?: any }) {
   const [inspectors, setInspectors] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -13,7 +13,7 @@ export default function AdminInspectors() {
   const [age, setAge] = useState("");
   const [experience, setExperience] = useState("");
   const [phone, setPhone] = useState("");
-  const [state, setState] = useState("West Bengal");
+  const [state, setState] = useState(currentUser?.state || "West Bengal");
   const [password, setPassword] = useState("");
   const [creating, setCreating] = useState(false);
 
@@ -22,7 +22,11 @@ export default function AdminInspectors() {
   }, []);
 
   const fetchInspectors = async () => {
-    const { data } = await supabase.from('inspectors').select('*').order('created_at', { ascending: false });
+    let query = supabase.from('inspectors').select('*').order('created_at', { ascending: false });
+    if (currentUser?.role === 'state_admin' && currentUser?.state) {
+        query = query.eq('state', currentUser.state);
+    }
+    const { data } = await query;
     if (data) setInspectors(data);
     setLoading(false);
   };
@@ -68,7 +72,7 @@ export default function AdminInspectors() {
             </div>
             <div>
               <label className="text-xs text-slate-500 uppercase font-semibold">State</label>
-              <select value={state} onChange={e=>setState(e.target.value)} className="w-full mt-1 p-2 border border-slate-300 rounded focus:border-indigo-500 outline-none bg-white">
+              <select value={state} onChange={e=>setState(e.target.value)} disabled={currentUser?.role === "state_admin"} className="w-full mt-1 p-2 border border-slate-300 rounded focus:border-indigo-500 outline-none bg-white disabled:bg-slate-100 disabled:text-slate-500">
                 <option value="Andaman and Nicobar Islands">Andaman and Nicobar Islands</option>
                 <option value="Andhra Pradesh">Andhra Pradesh</option>
                 <option value="Arunachal Pradesh">Arunachal Pradesh</option>

@@ -22,7 +22,11 @@ export default function AdminHotspots({ currentUser }: { currentUser?: any }) {
   const fetchData = async () => {
     setLoading(true);
     // Fetch unassigned complaints (no hotspot_id)
-    const { data: cData } = await supabase.from('citizen_requests').select('*').is('hotspot_id', null).order('created_at', { ascending: false });
+    let complaintsQuery = supabase.from('citizen_requests').select('*').is('hotspot_id', null).order('created_at', { ascending: false });
+    if (currentUser?.role === 'state_admin' && currentUser?.state) {
+        complaintsQuery = complaintsQuery.eq('state', currentUser.state);
+    }
+    const { data: cData } = await complaintsQuery;
     
     // Group similar complaints by state & category for UI grouping
     const grouped = (cData || []).reduce((acc: any, curr) => {
@@ -36,12 +40,11 @@ export default function AdminHotspots({ currentUser }: { currentUser?: any }) {
     setUnassignedComplaints(Object.values(grouped).filter((g: any) => g.complaints.length >= 2));
 
     // Fetch existing hotspots
-    const { data: hData } = await supabase.from('demand_hotspots')
-        .select(`
-            *,
-            inspectors ( name, phone )
-        `)
-        .order('created_at', { ascending: false });
+    let hotspotsQuery = supabase.from('demand_hotspots').select(`*, inspectors ( name, phone )`).order('created_at', { ascending: false });
+    if (currentUser?.role === 'state_admin' && currentUser?.state) {
+        hotspotsQuery = hotspotsQuery.eq('state', currentUser.state);
+    }
+    const { data: hData } = await hotspotsQuery;
     
     setHotspots(hData || []);
     setLoading(false);
@@ -95,16 +98,19 @@ export default function AdminHotspots({ currentUser }: { currentUser?: any }) {
     if (!amountStr) return;
     const amount = parseFloat(amountStr) || 0;
 
+    // Append map coordinates to description so the Admin can see exactly where it was pinned
+    const coordsStr = hotspot.exact_lat && hotspot.exact_lng ? `\n\n[Map Pinned Coordinates: Lat ${Number(hotspot.exact_lat).toFixed(6)}, Lng ${Number(hotspot.exact_lng).toFixed(6)}]` : "";
+    const fullDetails = description + coordsStr;
+
     const res = await fetch("/api/proposals", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-            title: project_title,
-            description: description,
-            amount: amount,
-            category: hotspot.infrastructure_category,
-            location: hotspot.exact_lat && hotspot.exact_lng ? `${hotspot.state} (${Number(hotspot.exact_lat).toFixed(4)}, ${Number(hotspot.exact_lng).toFixed(4)})` : hotspot.state,
-            timeline: "24 months",
+            project_name: project_title,
+            details: fullDetails,
+            expected_expenditure: amount,
+            sector: hotspot.infrastructure_category,
+            state: hotspot.state,
             hotspot_id: hotspot.id
         })
     });
@@ -125,7 +131,7 @@ export default function AdminHotspots({ currentUser }: { currentUser?: any }) {
     <div className="p-6 bg-slate-50 border border-slate-200 space-y-8">
       
       {/* Potential Hotspots - Only Admin sees this */}
-      {currentUser?.role === 'admin' && (
+      {(currentUser?.role === 'admin' || currentUser?.role === 'state_admin') && (
       <div>
         <h2 className="text-2xl font-bold font-serif text-slate-800 flex items-center mb-1"><AlertCircle className="w-6 h-6 mr-2 text-rose-500" /> Detected Demand Hotspots</h2>
         <p className="text-slate-500 text-sm mb-6">Groups of similar citizen complaints awaiting inspector assignment.</p>

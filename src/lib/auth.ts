@@ -2,7 +2,7 @@ import { cookies } from "next/headers";
 import { SignJWT, jwtVerify } from "jose";
 import clientPromise, { DB_NAME, USERS_COLLECTION } from "./mongodb";
 
-export const ROLES = ["admin", "ministry", "engineer", "agency", "user"] as const;
+export const ROLES = ["admin", "state_admin", "ministry", "engineer", "agency", "user"] as const;
 export type Role = (typeof ROLES)[number];
 
 export type SessionUser = {
@@ -12,6 +12,7 @@ export type SessionUser = {
   role: Role;
   ministry?: string;
   agency?: string;
+  state?: string;
 };
 
 const secret = process.env.AUTH_SECRET;
@@ -51,6 +52,7 @@ export async function getSession(): Promise<SessionUser | null> {
       role: payload.role as Role,
       ministry: payload.ministry ? String(payload.ministry) : undefined,
       agency: payload.agency ? String(payload.agency) : undefined,
+      state: payload.state ? String(payload.state) : undefined,
     };
   } catch {
     return null;
