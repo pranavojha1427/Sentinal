@@ -8,19 +8,24 @@ import { getMongoProjects, getProjectOverrides, applyProjectOverrides } from "@/
 export default async function DashboardPage() {
   const session = await getSession();
 
+  const matchFilter: any = {};
+  if (session?.role === "ministry") {
+    if (session.ministry) matchFilter.ministry = session.ministry;
+    if (session.state) matchFilter.state = session.state;
+  } else if (session?.role === "state_admin") {
+    if (session.state) matchFilter.state = session.state;
+  } else if (session?.role === "agency" || session?.role === "engineer") {
+    if (session.agency) matchFilter.agency = session.agency;
+  }
+  // Central admin sees all, matchFilter remains empty
+
   const supabase = await createClient();
 
   // Fetch everything in parallel - this happens ONCE when the page first loads
   const [req1, req2, req3, agencyRes, benchRes, alertsRes, mongoAgencyProjects] = await Promise.all([
-    supabase.from("projects").select("*")
-      .match(session?.role === "ministry" && session?.ministry ? { ministry: session?.ministry } : ((session?.role === "engineer" || session?.role === "agency") && session?.agency) ? { agency: session?.agency } : {})
-      .range(0, 999),
-    supabase.from("projects").select("*")
-      .match(session?.role === "ministry" && session?.ministry ? { ministry: session?.ministry } : ((session?.role === "engineer" || session?.role === "agency") && session?.agency) ? { agency: session?.agency } : {})
-      .range(1000, 1999),
-    supabase.from("projects").select("*")
-      .match(session?.role === "ministry" && session?.ministry ? { ministry: session?.ministry } : ((session?.role === "engineer" || session?.role === "agency") && session?.agency) ? { agency: session?.agency } : {})
-      .range(2000, 2999),
+    supabase.from("projects").select("*").match(matchFilter).range(0, 999),
+    supabase.from("projects").select("*").match(matchFilter).range(1000, 1999),
+    supabase.from("projects").select("*").match(matchFilter).range(2000, 2999),
     supabase.from("agency_performance_rankings").select("*").order("delay_frequency_pct", { ascending: false }),
     supabase.from("sector_benchmarks").select("*"),
     supabase.from("project_alerts").select("*").order("id", { ascending: false }),
@@ -56,7 +61,7 @@ export default async function DashboardPage() {
   const allProjects = [
     ...applyProjectOverrides(baseProjects, overrides),
     ...(mongoAgencyProjects || [])
-      .filter((p: any) => session?.role === "admin" || (session?.role === "ministry" && p.ministry === session?.ministry) || ((session?.role === "engineer" || session?.role === "agency") && p.agency === session?.agency) || session?.role === "user")
+      .filter((p: any) => session?.role === "admin" || (session?.role === "state_admin" && p.state === session?.state) || (session?.role === "ministry" && p.ministry === session?.ministry && (session?.state ? p.state === session?.state : true)) || ((session?.role === "engineer" || session?.role === "agency") && p.agency === session?.agency) || session?.role === "user")
       .map((p: any) => { const { _id, ...rest } = p as any; return { ...rest, id: _id.toString(), _source: "mongo" }; }),
   ];
 

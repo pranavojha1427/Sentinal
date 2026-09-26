@@ -269,7 +269,18 @@ export function DashboardClientView({ allProjects, agencyData, benchResData, ale
                      { id: 'complaints', label: 'Complaints' }
                  );
              }
-             return tabs.map(tab => (
+             
+               // Add analytics tabs for everyone except unauthenticated
+               if (currentUser) {
+                   tabs.push(
+                       { id: 'agency', label: 'Agency Leaderboard' },
+                       { id: 'benchmarks', label: 'Benchmarks' },
+                       { id: 'risk', label: 'Risk Prediction' },
+                       { id: 'alerts', label: 'Alerts & Actions' }
+                   );
+               }
+
+               return tabs.map(tab => (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
