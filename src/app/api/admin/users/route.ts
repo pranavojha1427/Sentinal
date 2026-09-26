@@ -41,7 +41,7 @@ export async function POST(req: Request) {
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    const newUser: any = { name, email, password: hashedPassword, role, createdAt: new Date() };
+    const newUser: any = { name, email, passwordHash: hashedPassword, role, active: true, createdAt: new Date() };
     if (ministry) newUser.ministry = ministry;
     if (agency) newUser.agency = agency;
     if (state) newUser.state = state;
