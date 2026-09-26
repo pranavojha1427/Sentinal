@@ -31,13 +31,15 @@ export async function POST(req: Request) {
     Analyze the following citizen complaint details:
     "${details}"
     
-    1. Translate the details to English.
-    2. Determine the most appropriate infrastructure category (e.g., Roads, Energy, Water, Education, Healthcare, Transport).
+    1. Identify the language. If it is NOT English, accurately translate it to English. If it is already in English, return it exactly as is.
+    2. Determine the most appropriate infrastructure category from this strict list: Roads, Energy, Water, Education, Healthcare, Transport, Others.
+    
+    CRITICAL: The "translated_text" field MUST ALWAYS be in English. NEVER output Bengali, Hindi, or any other regional language in the translated_text field.
     
     Output strictly valid JSON in this format:
     {
-      "translated_text": "english translation here",
-      "category": "infrastructure category here"
+      "translated_text": "<English translation of the complaint>",
+      "category": "<Category name>"
     }`;
 
     let translated_text = details;
