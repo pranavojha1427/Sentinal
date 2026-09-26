@@ -418,7 +418,7 @@ export function DashboardClientView({ allProjects, agencyData, benchResData, ale
       ) : activeTab === "inspectors" && currentUser?.role === "state_admin" ? (
         <AdminInspectors currentUser={currentUser} />
       ) : activeTab === "accounts" && (currentUser?.role === "admin" || currentUser?.role === "state_admin") ? (
-        <AdminAccountManager />
+        <AdminAccountManager currentUser={currentUser} />
       ) : activeTab === "my-projects" && currentUser?.role === "agency" ? (
         <AgencyProjectManager projects={allProjects.filter((p: any) => p.agency === currentUser?.agency && !p.is_completed)} agency={currentUser?.agency!} />
       ) : activeTab !== "dashboard" && activeTab !== "proposals" && activeTab !== "complaints" && activeTab !== "hotspots" && activeTab !== "inspectors" && (
