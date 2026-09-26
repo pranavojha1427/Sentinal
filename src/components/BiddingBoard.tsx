@@ -42,7 +42,7 @@ export function BiddingBoard({ proposal, currentUser }: any) {
         {isClosed ? <span className="text-red-600 font-bold">Bidding Closed</span> : <span className="text-green-600 font-bold">{daysLeft} days remaining</span>}
       </div>
 
-      {currentUser.role === "admin" && (
+      {(currentUser.role === "admin" || currentUser.role === "state_admin") && (
         <div className="space-y-2">
           {bids.map((b, i) => (
             <div key={i} className="flex justify-between items-center bg-white p-3 border rounded">

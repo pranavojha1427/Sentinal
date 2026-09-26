@@ -16,7 +16,7 @@ export async function GET(req: Request) {
 
   const bids = await db.collection(BIDS_COLLECTION).find({ proposalId }).sort({ bidAmount: 1 }).toArray();
 
-  if (session.role === "admin") {
+  if (session.role === "admin" || session.role === "state_admin") {
     // Merge ranks from supabase
     const supabase = await createClient();
     const { data: rankData } = await supabase.from("agency_performance_rankings").select("agency, delay_frequency_pct, avg_cost_overrun_pct").order("delay_frequency_pct", { ascending: true });
