@@ -244,8 +244,8 @@ export function DashboardClientView({ allProjects, agencyData, benchResData, ale
     }
 
     results.sort((a, b) => {
-      if (a.delay_frequency_pct !== b.delay_frequency_pct) return b.delay_frequency_pct - a.delay_frequency_pct;
-      if (a.avg_cost_overrun_pct !== b.avg_cost_overrun_pct) return b.avg_cost_overrun_pct - a.avg_cost_overrun_pct;
+      if (a.delay_frequency_pct !== b.delay_frequency_pct) return a.delay_frequency_pct - b.delay_frequency_pct;
+      if (a.avg_cost_overrun_pct !== b.avg_cost_overrun_pct) return a.avg_cost_overrun_pct - b.avg_cost_overrun_pct;
       return b.total_projects - a.total_projects;
     });
 
