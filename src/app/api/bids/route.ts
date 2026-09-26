@@ -54,6 +54,11 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Bidding window (1 week) has closed." }, { status: 400 });
   }
 
+  const existingBid = await db.collection(BIDS_COLLECTION).findOne({ proposalId: body.proposalId, agencyName: session.agency });
+  if (existingBid) {
+    return NextResponse.json({ error: "You have already placed a bid for this proposal." }, { status: 400 });
+  }
+
   const bid = {
     proposalId: body.proposalId,
     agencyId: session.id,

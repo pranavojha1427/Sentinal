@@ -461,7 +461,7 @@ export function DashboardClientView({ allProjects, agencyData, benchResData, ale
 
       {activeTab === "proposals" && (
         <div className="space-y-8 p-6">
-          <WorkflowInbox currentUser={currentUser as any} />
+          <WorkflowInbox currentUser={currentUser as any} agencyRanks={dynamicAgencyData} />
           {(currentUser?.role === "agency" || currentUser?.role === "ministry") && (
             <ProposalForm currentUser={currentUser as any} onSuccess={() => window.location.reload()} />
           )}

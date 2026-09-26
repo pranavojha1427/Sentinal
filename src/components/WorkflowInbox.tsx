@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { Button } from "./ui/button";
 import { BiddingBoard } from "./BiddingBoard";
 
-export function WorkflowInbox({ currentUser }: any) {
+export function WorkflowInbox({ currentUser, agencyRanks }: any) {
   const [proposals, setProposals] = useState<any[]>([]);
   const [feedback, setFeedback] = useState("");
   const [projectCodes, setProjectCodes] = useState<Record<string, string>>({});
@@ -88,7 +88,7 @@ export function WorkflowInbox({ currentUser }: any) {
 
             {activeTab === "all" && p.status === "bidding_open" && (
               <div className="mt-4 border-t pt-4">
-                <BiddingBoard proposal={p} currentUser={currentUser} />
+                <BiddingBoard proposal={p} currentUser={currentUser} agencyRanks={agencyRanks} />
               </div>
             )}
             
