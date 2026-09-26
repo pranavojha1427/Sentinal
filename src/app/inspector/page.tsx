@@ -2,8 +2,14 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabaseClient";
-import { Loader2, MapPin, AlertCircle, CheckCircle2, ChevronRight, FileText } from "lucide-react";
+import { Loader2, MapPin, AlertCircle, CheckCircle2, ChevronRight, FileText, Map as MapIcon } from "lucide-react";
 import Link from "next/link";
+import dynamic from "next/dynamic";
+
+const MapPicker = dynamic(() => import("@/components/InspectorMapPicker"), {
+  ssr: false,
+  loading: () => <div className="h-64 w-full bg-slate-100 animate-pulse flex items-center justify-center text-slate-400">Loading Map...</div>
+});
 
 export default function InspectorPortal() {
   const [loading, setLoading] = useState(true);
@@ -20,6 +26,8 @@ export default function InspectorPortal() {
   // Report states
   const [reportText, setReportText] = useState("");
   const [proposedProjectTitle, setProposedProjectTitle] = useState("");
+  const [exactLat, setExactLat] = useState<number | null>(null);
+  const [exactLng, setExactLng] = useState<number | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
@@ -32,15 +40,12 @@ export default function InspectorPortal() {
   }, []);
 
   const fetchInspectorData = async (id: string) => {
-    setLoading(true);
-    const { data: insData } = await supabase.from('inspectors').select('*').eq('id', id).single();
-    if (insData) {
-        setInspector(insData);
-        // Fetch assigned hotspots
-        const { data: hsData } = await supabase.from('demand_hotspots').select('*').eq('inspector_id', id).order('created_at', { ascending: false });
-        if (hsData) setHotspots(hsData);
-    } else {
-        localStorage.removeItem('inspector_id');
+    const { data: iData } = await supabase.from('inspectors').select('*').eq('id', id).single();
+    if (iData) {
+        setInspector(iData);
+        // Fetch hotspots assigned to this inspector
+        const { data: hData } = await supabase.from('demand_hotspots').select('*').eq('inspector_id', id).order('created_at', { ascending: false });
+        if (hData) setHotspots(hData);
     }
     setLoading(false);
   };
@@ -65,6 +70,11 @@ export default function InspectorPortal() {
 
   const submitReport = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!exactLat || !exactLng) {
+        alert("Please pinpoint the exact location on the map.");
+        return;
+    }
+
     setSubmitting(true);
     
     // Update hotspot status
@@ -83,14 +93,15 @@ export default function InspectorPortal() {
     // We will automatically create a Draft project in the 'projects' table for the Ministry
     // so they can see the initiative.
     
+    const location_geom = `POINT(${exactLng} ${exactLat})`;
+
     const { error: pError } = await supabase.from('projects').insert({
-        title: proposedProjectTitle,
-        category: selectedHotspot.infrastructure_category,
-        description: `Initiative raised via Inspector Report.\\nHotspot Reason: ${selectedHotspot.request_count} citizen complaints.\\nInspector Findings: ${reportText}`,
-        budget_allocated: 0,
+        project_name: proposedProjectTitle,
+        hml_category: selectedHotspot.infrastructure_category,
+        initiative_details: `Initiative raised via Inspector Report.\nHotspot Reason: ${selectedHotspot.request_count} citizen complaints.\nInspector Findings: ${reportText}`,
         status: 'draft',
         state: inspector.state,
-        completion_percentage: 0
+        location_geom: location_geom
     });
 
     setSubmitting(false);
@@ -101,18 +112,21 @@ export default function InspectorPortal() {
         setSelectedHotspot(null);
         setReportText("");
         setProposedProjectTitle("");
+        setExactLat(null);
+        setExactLng(null);
         fetchInspectorData(inspector.id);
     }
   };
 
-  if (loading) return <div className="min-h-screen bg-slate-50 flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-indigo-500" /></div>;
+  if (loading) return <div className="min-h-screen flex items-center justify-center bg-slate-50"><Loader2 className="w-8 h-8 animate-spin text-indigo-600" /></div>;
 
   if (!inspector) {
     return (
-        <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4">
-          <div className="w-full max-w-md bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-200">
-            <div className="bg-slate-900 p-6 text-white text-center">
-              <h1 className="text-2xl font-bold">Inspector Portal</h1>
+        <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
+          <div className="w-full max-w-md bg-white rounded-2xl shadow-xl overflow-hidden">
+            <div className="bg-slate-900 p-8 text-center">
+              <ShieldAlert className="w-12 h-12 text-indigo-400 mx-auto mb-4" />
+              <h1 className="text-2xl font-bold text-white tracking-tight">Inspector Portal</h1>
               <p className="text-slate-300 text-sm mt-1">Field Examination Login</p>
             </div>
             <div className="p-8 space-y-6">
@@ -163,6 +177,20 @@ export default function InspectorPortal() {
                         <label className="block text-sm font-semibold text-slate-700 mb-2">Field Examination Report</label>
                         <p className="text-xs text-slate-500 mb-2">Describe what you found at the location and whether a project is required.</p>
                         <textarea required value={reportText} onChange={e=>setReportText(e.target.value)} className="w-full h-32 p-3 border border-slate-300 rounded focus:border-indigo-500 outline-none resize-none" placeholder="Enter detailed findings..."></textarea>
+                    </div>
+
+                    <div className="pt-4 border-t border-slate-100">
+                        <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center"><MapIcon className="w-4 h-4 mr-1 text-indigo-600"/> Exact Location Selection</label>
+                        <p className="text-xs text-slate-500 mb-3">Please pinpoint the exact coordinates for the proposed initiative.</p>
+                        <MapPicker onLocationSelect={(lat, lng) => {
+                            setExactLat(lat);
+                            setExactLng(lng);
+                        }} />
+                        {exactLat && exactLng && (
+                            <div className="mt-2 text-xs font-mono text-emerald-600 bg-emerald-50 inline-block px-2 py-1 rounded">
+                                Selected: {exactLat.toFixed(6)}, {exactLng.toFixed(6)}
+                            </div>
+                        )}
                     </div>
 
                     <div className="pt-4 border-t border-slate-100">
