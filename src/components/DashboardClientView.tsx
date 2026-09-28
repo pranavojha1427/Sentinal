@@ -105,7 +105,7 @@ const BRICS_STATES = {
 export function DashboardClientView({ allProjects, agencyData, benchResData, alertsData, kpi, currentUser }: Props) {
   const [language, setLanguage] = useState<string>("en");
   const t = I18N[language] || I18N.en;
-  const [countryFilter, setCountryFilter] = useState<string>("India");
+  const [countryFilter, setCountryFilter] = useState<string>(currentUser?.country || "India");
   const [stateFilter, setStateFilter] = useState<string | null>(null);
   const [sectorFilter, setSectorFilter] = useState<string | null>(null);
   const [ministryFilter, setMinistryFilter] = useState<string | null>(null);
@@ -409,16 +409,23 @@ export function DashboardClientView({ allProjects, agencyData, benchResData, ale
               <div className="flex flex-col gap-1 w-full md:w-auto flex-1 min-w-[200px]">
                 <label className="text-[10px] font-mono text-slate-500 uppercase tracking-widest">Country (BRICS)</label>
                 <select 
-                  className="bg-slate-50 border border-slate-300 text-slate-700 p-2 text-sm font-mono focus:border-emerald-500 outline-none"
+                  className="bg-slate-50 border border-slate-300 text-slate-700 p-2 text-sm font-mono focus:border-emerald-500 outline-none disabled:opacity-50"
                   value={countryFilter}
                   onChange={(e) => { setCountryFilter(e.target.value); setStateFilter(null); }}
+                  disabled={!!currentUser?.country} 
                 >
-                  <option value="All">All BRICS (Global)</option>
-                  <option value="India">India</option>
-                  <option value="Brazil">Brazil</option>
-                  <option value="Russia">Russia</option>
-                  <option value="China">China</option>
-                  <option value="South Africa">South Africa</option>
+                  {(!currentUser?.country || (currentUser?.role === "admin" && !currentUser?.country)) && <option value="All">All BRICS (Global)</option>}
+                  {currentUser?.country ? (
+                    <option value={currentUser.country}>{currentUser.country}</option>
+                  ) : (
+                    <>
+                      <option value="India">India</option>
+                      <option value="Brazil">Brazil</option>
+                      <option value="Russia">Russia</option>
+                      <option value="China">China</option>
+                      <option value="South Africa">South Africa</option>
+                    </>
+                  )}
                 </select>
               </div>
 

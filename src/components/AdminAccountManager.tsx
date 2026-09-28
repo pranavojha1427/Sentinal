@@ -39,11 +39,12 @@ const MINISTRIES = [
 ];
 
 export function AdminAccountManager({ currentUser }: { currentUser?: any }) {
-  const isCentralAdmin = currentUser?.role === "admin";
+  const isBricsAdmin = currentUser?.role === "admin" && !currentUser?.country;
+  const isCountryAdmin = currentUser?.role === "admin" && !!currentUser?.country;
   const isStateAdmin = currentUser?.role === "state_admin";
 
-  const defaultRole = isCentralAdmin ? "Country Admin" : "Ministry";
-  const availableRoles = isCentralAdmin ? ["Country Admin", "Ministry", "Agency"] : ["Ministry"];
+  const defaultRole = isBricsAdmin ? "Country Admin" : isCountryAdmin ? "State Admin" : "Ministry";
+  const availableRoles = isBricsAdmin ? ["Country Admin", "State Admin", "Ministry", "Agency"] : isCountryAdmin ? ["State Admin", "Ministry", "Agency"] : ["Ministry"];
 
   const [form, setForm] = useState({ name: "", email: "", password: "", role: defaultRole, ministry: "", agency: "", state: "", country: "" });
   const [message, setMessage] = useState("");
@@ -53,7 +54,7 @@ export function AdminAccountManager({ currentUser }: { currentUser?: any }) {
     e.preventDefault(); setLoading(true); setMessage("");
     
     // Inject the state admin's state into the ministry account
-    const payload = { ...form };
+    const payload = { ...form, country: isCountryAdmin ? currentUser.country : form.country };
     if (isStateAdmin && payload.role === "Ministry") {
         payload.state = currentUser.state; // State admin assigns ministry to their own state
     }

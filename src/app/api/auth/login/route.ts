@@ -28,6 +28,7 @@ export async function POST(req: Request) {
       ministry: user.ministry,
       agency: user.agency,
       state: user.state,
+      country: user.country,
     });
 
     return NextResponse.json({ ok: true, role: user.role });

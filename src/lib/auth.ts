@@ -13,6 +13,7 @@ export type SessionUser = {
   ministry?: string;
   agency?: string;
   state?: string;
+  country?: string;
 };
 
 const secret = process.env.AUTH_SECRET;
@@ -53,6 +54,7 @@ export async function getSession(): Promise<SessionUser | null> {
       ministry: payload.ministry ? String(payload.ministry) : undefined,
       agency: payload.agency ? String(payload.agency) : undefined,
       state: payload.state ? String(payload.state) : undefined,
+      country: payload.country ? String(payload.country) : undefined,
     };
   } catch {
     return null;
