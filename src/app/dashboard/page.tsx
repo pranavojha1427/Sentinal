@@ -35,7 +35,7 @@ export default async function DashboardPage() {
   const promises = Array.from({ length: pages }).map((_, page) => 
     supabase
       .from("projects")
-      .select("id, project_name, project_code, sector, agency, state, original_cost, revised_cost, cumulative_expenditure, physical_progress, status, original_doc, revised_doc, contractor_delay, land_acquisition_issue, forest_clearance_issue")
+      .select("id, project_name, project_code, sector, ministry, agency, state, original_cost, revised_cost, cumulative_expenditure, physical_progress, status, original_doc, revised_doc, contractor_delay, land_acquisition_issue, forest_clearance_issue")
       .match(matchFilter)
       .range(page * pageSize, (page + 1) * pageSize - 1)
   );
