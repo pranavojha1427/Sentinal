@@ -13,8 +13,10 @@ import AdminInspectors from "./AdminInspectors";
 import { AgencyProjectManager } from "@/components/AgencyProjectManager";
 import { WorkflowInbox } from "@/components/WorkflowInbox";
 import { ProposalForm } from "@/components/ProposalForm";
+import InvestmentParity from "./InvestmentParity";
 import { NotificationBell } from "@/components/NotificationBell";
 import { SessionUser } from "@/lib/auth";
+import { I18N } from "@/lib/i18n";
 
 
 
@@ -31,6 +33,7 @@ const TAB_ITEMS = [
   { id: "complaints", label: "View Complaints" },
   { id: "my-projects", label: "My Projects" },
   { id: "participatory", label: "Participatory Priority Engine" },
+    { id: "gatekeeper", label: "PDF Gatekeeper (Investment Parity)" },
   { id: "agency", label: "Agency Leaderboard" },
   { id: "benchmarks", label: "Benchmarks" },
   { id: "risk", label: "Risk Prediction" },
@@ -68,7 +71,41 @@ const ALL_MINISTRIES = [
   "Ministry of Steel"
 ];
 
+
+const BRICS_STATES = {
+    "Brazil": [
+        "São Paulo", "Rio de Janeiro", "Minas Gerais", "Bahia", "Paraná", 
+        "Rio Grande do Sul", "Pernambuco", "Ceará", "Pará", "Santa Catarina", 
+        "Maranhão", "Goiás", "Amazonas", "Espírito Santo", "Paraíba", 
+        "Rio Grande do Norte", "Mato Grosso", "Alagoas", "Piauí", 
+        "Distrito Federal", "Mato Grosso do Sul", "Sergipe", "Rondônia", 
+        "Tocantins", "Acre", "Amapá", "Roraima", "SAo Paulo", "ParanA"
+    ],
+    "Russia": [
+        "Moscow", "Moskva", "Saint Petersburg", "City of St. Petersburg", "Novosibirsk", 
+        "Yekaterinburg", "Sverdlovsk", "Kazan", "Tatarstan", "Nizhny Novgorod", 
+        "Chelyabinsk", "Omsk", "Samara", "Rostov-on-Don", "Ufa", "Krasnoyarsk", 
+        "Perm", "Voronezh", "Volgograd", "Krasnodar", "Saratov", "Tyumen", 
+        "Tolyatti", "Izhevsk", "Barnaul", "Ulyanovsk", "Irkutsk", "Khabarovsk", 
+        "Yaroslavl", "Vladivostok"
+    ],
+    "China": [
+        "Guangdong", "Jiangsu", "Shandong", "Zhejiang", "Henan", "Sichuan", 
+        "Hubei", "Fujian", "Hunan", "Shanghai", "Anhui", "Hebei", "Beijing", 
+        "Shaanxi", "Jiangxi", "Chongqing", "Liaoning", "Guangxi", "Yunnan", 
+        "Inner Mongolia", "Shanxi", "Guizhou", "Heilongjiang", "Xinjiang", 
+        "Tianjin", "Jilin", "Gansu", "Hainan", "Ningxia", "Qinghai", "Tibet"
+    ],
+    "South Africa": [
+        "Gauteng", "KwaZulu-Natal", "Western Cape", "Eastern Cape", "Limpopo", 
+        "Mpumalanga", "North West", "Free State", "Northern Cape"
+    ],
+};
+
 export function DashboardClientView({ allProjects, agencyData, benchResData, alertsData, kpi, currentUser }: Props) {
+  const [language, setLanguage] = useState<string>("en");
+  const t = I18N[language] || I18N.en;
+  const [countryFilter, setCountryFilter] = useState<string>("India");
   const [stateFilter, setStateFilter] = useState<string | null>(null);
   const [sectorFilter, setSectorFilter] = useState<string | null>(null);
   const [ministryFilter, setMinistryFilter] = useState<string | null>(null);
@@ -109,6 +146,21 @@ export function DashboardClientView({ allProjects, agencyData, benchResData, ale
 
   const filteredProjects = useMemo(() => {
     let result = projectsWithMinistry;
+
+    // Multi-tenant / BRICS filtering logic
+    result = result.filter(p => {
+        let pCountry = 'India';
+        if (p.state) {
+            for (const [c, states] of Object.entries(BRICS_STATES)) {
+                if (states.includes(p.state)) {
+                    pCountry = c;
+                    break;
+                }
+            }
+        }
+        if (countryFilter === 'All') return true;
+          return pCountry === countryFilter;
+    });
     if (stateFilter) {
       const sn = stateFilter.toLowerCase();
       result = result.filter(p => p.state && p.state.toLowerCase().includes(sn));
@@ -120,18 +172,18 @@ export function DashboardClientView({ allProjects, agencyData, benchResData, ale
       result = result.filter(p => p.ministry === ministryFilter);
     }
     return result;
-  }, [projectsWithMinistry, stateFilter, sectorFilter, ministryFilter]);
+  }, [projectsWithMinistry, stateFilter, sectorFilter, ministryFilter, countryFilter]);
 
   // KPIs bypass if no filters are active to use precomputed values
-  const isFiltered = stateFilter || sectorFilter || ministryFilter || (currentUser && currentUser.role !== "admin" && currentUser.role !== "user");
+  const isFiltered = stateFilter || sectorFilter || ministryFilter || countryFilter !== 'India' || (currentUser && currentUser.role !== "admin" && currentUser.role !== "user");
   const summary = useMemo(() => {
     return {
-      totalProjects: !isFiltered && kpi ? Number(kpi.project_count) : filteredProjects.length,
-      totalOriginalCost: !isFiltered && kpi ? Number(kpi.total_original_cost) : filteredProjects.reduce((sum, p) => sum + (p.original_cost || 0), 0),
-      totalRevisedCost: !isFiltered && kpi ? Number(kpi.total_revised_cost) : filteredProjects.reduce((sum, p) => sum + (p.revised_cost || p.original_cost || 0), 0),
-      totalExpenditure: !isFiltered && kpi ? Number(kpi.total_expenditure) : filteredProjects.reduce((sum, p) => sum + (p.cumulative_expenditure || 0), 0)
+      totalProjects: filteredProjects.length,
+      totalOriginalCost: filteredProjects.reduce((sum, p) => sum + (p.original_cost || 0), 0),
+      totalRevisedCost: filteredProjects.reduce((sum, p) => sum + (p.revised_cost || p.original_cost || 0), 0),
+      totalExpenditure: filteredProjects.reduce((sum, p) => sum + (p.cumulative_expenditure || 0), 0)
     };
-  }, [filteredProjects, ministryFilter, isFiltered, kpi]);
+  }, [filteredProjects]);
 
   const { totalProjects, totalOriginalCost, totalRevisedCost, totalExpenditure } = summary;
 
@@ -264,7 +316,7 @@ export function DashboardClientView({ allProjects, agencyData, benchResData, ale
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 w-full">
             <p className="text-slate-600 font-mono text-sm uppercase">Infrastructure Project Monitoring Platform</p>
             <div className="flex flex-wrap items-center gap-3">
-              {!currentUser && <a href="/pulse" className="text-xs font-mono uppercase bg-indigo-600 text-white px-4 py-2 hover:bg-indigo-700 transition-colors font-bold shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] border border-black whitespace-nowrap">Add Complaint</a>}
+              {!currentUser && <a href="/pulse" className="text-xs font-mono uppercase bg-indigo-600 text-white px-4 py-2 hover:bg-indigo-700 transition-colors font-bold shadow-[2px_2px_0px_0px_rgba(0,0,0₹)] border border-black whitespace-nowrap">Add Complaint</a>}
               
               {currentUser ? (
                 <>
@@ -277,7 +329,7 @@ export function DashboardClientView({ allProjects, agencyData, benchResData, ale
                   <a href="/logout" className="text-xs font-mono uppercase bg-slate-900 text-white px-3 py-2 hover:bg-slate-800 transition-colors">Logout</a>
                 </>
               ) : (
-                <a href="/login" className="text-xs font-mono uppercase bg-emerald-600 text-white px-6 py-2 hover:bg-emerald-700 transition-colors font-bold shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] border border-black">Login</a>
+                <a href="/login" className="text-xs font-mono uppercase bg-emerald-600 text-white px-6 py-2 hover:bg-emerald-700 transition-colors font-bold shadow-[2px_2px_0px_0px_rgba(0,0,0₹)] border border-black">Login</a>
               )}
             </div>
           </div>
@@ -294,7 +346,8 @@ export function DashboardClientView({ allProjects, agencyData, benchResData, ale
                  // Central Admin
                  tabs.push(
                      { id: 'dashboard', label: 'Participatory Priority Engine (Dashboard)' },
-                     { id: 'accounts', label: 'Accounts (State Admins & Agencies)' }
+                     { id: 'gatekeeper', label: 'PDF Gatekeeper (Investment Parity)' },
+                       { id: 'accounts', label: 'Accounts (Platform Provisioning)' }
                  );
              } else if (currentUser.role === 'state_admin') {
                  // State Admin
@@ -353,6 +406,22 @@ export function DashboardClientView({ allProjects, agencyData, benchResData, ale
           
           {/* Filters Row */}
           <div className="flex flex-wrap gap-4 p-4 bg-white border border-slate-200 rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,0.1)]">
+              <div className="flex flex-col gap-1 w-full md:w-auto flex-1 min-w-[200px]">
+                <label className="text-[10px] font-mono text-slate-500 uppercase tracking-widest">Country (BRICS)</label>
+                <select 
+                  className="bg-slate-50 border border-slate-300 text-slate-700 p-2 text-sm font-mono focus:border-emerald-500 outline-none"
+                  value={countryFilter}
+                  onChange={(e) => { setCountryFilter(e.target.value); setStateFilter(null); }}
+                >
+                  <option value="All">All BRICS (Global)</option>
+                  <option value="India">India</option>
+                  <option value="Brazil">Brazil</option>
+                  <option value="Russia">Russia</option>
+                  <option value="China">China</option>
+                  <option value="South Africa">South Africa</option>
+                </select>
+              </div>
+
             <div className="flex flex-col gap-1 w-full md:w-auto flex-1 min-w-[200px]">
               <label className="text-[10px] font-mono text-slate-500 uppercase tracking-widest">Sector</label>
               <select 
@@ -396,15 +465,15 @@ export function DashboardClientView({ allProjects, agencyData, benchResData, ale
             </Card>
             <Card className="bg-amber-100 text-amber-950 border-none shadow-sm">
               <CardHeader className="pb-2"><CardTitle className="text-sm font-bold uppercase">Original Approved Cost (in cr.)</CardTitle></CardHeader>
-              <CardContent><div className="text-4xl font-black">₹{formatNumber(totalOriginalCost)}</div></CardContent>
+              <CardContent><div className="text-4xl font-black">{"\u20B9"}{formatNumber(totalOriginalCost)}</div></CardContent>
             </Card>
             <Card className="bg-rose-100 text-rose-950 border-none shadow-sm">
               <CardHeader className="pb-2"><CardTitle className="text-sm font-bold uppercase">Latest Revised Cost (in cr.)</CardTitle></CardHeader>
-              <CardContent><div className="text-4xl font-black">₹{formatNumber(totalRevisedCost)}</div></CardContent>
+              <CardContent><div className="text-4xl font-black">{"\u20B9"}{formatNumber(totalRevisedCost)}</div></CardContent>
             </Card>
             <Card className="bg-lime-100 text-lime-950 border-none shadow-sm">
               <CardHeader className="pb-2"><CardTitle className="text-sm font-bold uppercase">Cumulative Expenditure (in cr.)</CardTitle></CardHeader>
-              <CardContent><div className="text-4xl font-black">₹{formatNumber(totalExpenditure)}</div></CardContent>
+              <CardContent><div className="text-4xl font-black">{"\u20B9"}{formatNumber(totalExpenditure)}</div></CardContent>
             </Card>
           </div>
 
@@ -435,7 +504,7 @@ export function DashboardClientView({ allProjects, agencyData, benchResData, ale
               </CardHeader>
               <CardContent className="pt-6 flex-1 flex flex-col">
                 <Suspense fallback={<div className="h-[400px] flex items-center justify-center text-slate-500 font-mono">Loading Map...</div>}>
-                  <StateRiskMap projects={allProjects} selectedState={stateFilter || undefined} onStateSelect={(s) => setStateFilter(s === stateFilter ? null : s)} />
+                  <StateRiskMap country={countryFilter} projects={allProjects} selectedState={stateFilter || undefined} onStateSelect={(s) => setStateFilter(s === stateFilter ? null : s)} />
                 </Suspense>
               </CardContent>
             </Card>
@@ -454,7 +523,7 @@ export function DashboardClientView({ allProjects, agencyData, benchResData, ale
                   />
                 </div>
               </CardHeader>
-              <CardContent className="p-0"><ProjectTableAI projects={searchedProjects} /></CardContent>
+              <CardContent className="p-0"><ProjectTableAI projects={searchedProjects} currentUser={currentUser} /></CardContent>
           </Card>
         </div>
       )}
@@ -483,7 +552,9 @@ export function DashboardClientView({ allProjects, agencyData, benchResData, ale
         <AdminAccountManager currentUser={currentUser} />
       ) : activeTab === "my-projects" && currentUser?.role === "agency" ? (
         <AgencyProjectManager projects={allProjects.filter((p: any) => p.agency === currentUser?.agency && !p.is_completed)} agency={currentUser?.agency!} />
-      ) : activeTab !== "dashboard" && activeTab !== "proposals" && activeTab !== "complaints" && activeTab !== "hotspots" && activeTab !== "inspectors" && (
+      ) : activeTab === "gatekeeper" ? (
+        <InvestmentParity projects={filteredProjects} />
+      ) : activeTab !== "dashboard" && activeTab !== "proposals" && activeTab !== "complaints" && activeTab !== "hotspots" && activeTab !== "inspectors" && activeTab !== "gatekeeper" && (
         <AnalyticsTabs
           activeTab={activeTab}
           agencyData={dynamicAgencyData}
@@ -495,3 +566,4 @@ export function DashboardClientView({ allProjects, agencyData, benchResData, ale
     </div>
   );
 }
+

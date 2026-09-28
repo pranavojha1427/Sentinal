@@ -12,6 +12,10 @@ const STATES = [
   "Telangana", "Tripura", "Uttar Pradesh", "Uttarakhand", "West Bengal"
 ];
 
+const COUNTRIES = [
+  "India", "Brazil", "Russia", "China", "South Africa"
+];
+
 const MINISTRIES = [
   "Department for Promotion of Industry & Internal Trade",
   "Department of Higher Education",
@@ -38,10 +42,10 @@ export function AdminAccountManager({ currentUser }: { currentUser?: any }) {
   const isCentralAdmin = currentUser?.role === "admin";
   const isStateAdmin = currentUser?.role === "state_admin";
 
-  const defaultRole = isCentralAdmin ? "State Admin" : "Ministry";
-  const availableRoles = isCentralAdmin ? ["State Admin", "Agency"] : ["Ministry"];
+  const defaultRole = isCentralAdmin ? "Country Admin" : "Ministry";
+  const availableRoles = isCentralAdmin ? ["Country Admin", "Ministry", "Agency"] : ["Ministry"];
 
-  const [form, setForm] = useState({ name: "", email: "", password: "", role: defaultRole, ministry: "", agency: "", state: "" });
+  const [form, setForm] = useState({ name: "", email: "", password: "", role: defaultRole, ministry: "", agency: "", state: "", country: "" });
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -59,7 +63,7 @@ export function AdminAccountManager({ currentUser }: { currentUser?: any }) {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Unable to create account.");
       setMessage(`Account created for ${form.email}.`);
-      setForm({ name: "", email: "", password: "", role: defaultRole, ministry: "", agency: "", state: "" });
+      setForm({ name: "", email: "", password: "", role: defaultRole, ministry: "", agency: "", state: "", country: "" });
     } catch (e: any) { setMessage(e.message); }
     finally { setLoading(false); }
   }
@@ -93,6 +97,15 @@ export function AdminAccountManager({ currentUser }: { currentUser?: any }) {
             <select required className="mt-1 w-full border border-slate-300 p-2 text-sm font-sans bg-white outline-none focus:border-indigo-500" value={form.state} onChange={e => setForm({...form, state:e.target.value})}>
               <option value="" disabled>Select State</option>
               {STATES.map(s => <option key={s} value={s}>{s}</option>)}
+            </select>
+          </label>
+        )}
+
+        {form.role === "Country Admin" && (
+          <label className="text-xs font-mono uppercase text-slate-600">Country Assignment
+            <select required className="mt-1 w-full border border-slate-300 p-2 text-sm font-sans bg-white outline-none focus:border-indigo-500" value={form.country} onChange={e => setForm({...form, country:e.target.value})}>
+              <option value="" disabled>Select Country</option>
+              {COUNTRIES.map(c => <option key={c} value={c}>{c}</option>)}
             </select>
           </label>
         )}

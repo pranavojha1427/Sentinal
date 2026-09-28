@@ -5,6 +5,9 @@ import { getSession } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { getMongoProjects, getProjectOverrides, applyProjectOverrides } from "@/lib/project-store";
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default async function DashboardPage() {
   const session = await getSession();
 
@@ -22,26 +25,49 @@ export default async function DashboardPage() {
   const supabase = await createClient();
 
   // Fetch everything in parallel - this happens ONCE when the page first loads
-  const [req1, req2, req3, agencyRes, benchRes, alertsRes, mongoAgencyProjects] = await Promise.all([
-    supabase.from("projects").select("*").match(matchFilter).range(0, 999),
-    supabase.from("projects").select("*").match(matchFilter).range(1000, 1999),
-    supabase.from("projects").select("*").match(matchFilter).range(2000, 2999),
+  
+  
+  // Fetch all projects using pagination IN PARALLEL to avoid Vercel timeouts
+  const pageSize = 1000;
+  const estimatedTotal = 12000; // Hardcoded estimate to cover the 10,853 projects
+  const pages = Math.ceil(estimatedTotal / pageSize);
+  
+  const promises = Array.from({ length: pages }).map((_, page) => 
+    supabase
+      .from("projects")
+      .select("id, project_name, project_code, sector, agency, state, original_cost, revised_cost, cumulative_expenditure, physical_progress, status, original_doc, revised_doc, contractor_delay, land_acquisition_issue, forest_clearance_issue")
+      .match(matchFilter)
+      .range(page * pageSize, (page + 1) * pageSize - 1)
+  );
+
+  const results = await Promise.all(promises);
+  
+  let allProjectsRaw: any[] = [];
+  for (const res of results) {
+    if (res.error) {
+      console.error("Error fetching from supabase chunk", res.error);
+    }
+    if (res.data) {
+      allProjectsRaw.push(...res.data);
+    }
+  }
+
+
+  const [agencyRes, benchRes, alertsRes, mongoAgencyProjects] = await Promise.all([
     supabase.from("agency_performance_rankings").select("*").order("delay_frequency_pct", { ascending: false }),
     supabase.from("sector_benchmarks").select("*"),
     supabase.from("project_alerts").select("*").order("id", { ascending: false }),
     getMongoProjects().catch(e => { console.error("MongoDB Fetch Error:", e); return []; }),
   ]);
 
-  if (req1.error || req2.error || req3.error || agencyRes.error || benchRes.error || alertsRes.error) {
+
+  if (agencyRes.error || benchRes.error || alertsRes.error) {
     return (
       <div className="p-8 text-red-500 bg-slate-50 min-h-screen flex items-center justify-center font-mono text-center">
         <div>
-          <h2 className="text-xl font-bold mb-4">Error loading projects</h2>
+          <h2 className="text-xl font-bold mb-4">Error loading dashboard metadata</h2>
           <pre className="text-left bg-white p-4 rounded text-sm text-red-400 overflow-auto max-w-4xl">
             {JSON.stringify({
-              req1: req1.error,
-              req2: req2.error,
-              req3: req3.error,
               agency: agencyRes.error,
               bench: benchRes.error,
               alerts: alertsRes.error
@@ -50,14 +76,10 @@ export default async function DashboardPage() {
         </div>
       </div>
     );
-  }
-
-  const baseProjects = [
-    ...(req1.data || []),
-    ...(req2.data || []),
-    ...(req3.data || [])
-  ];
+  };
+  const baseProjects = allProjectsRaw;
   const overrides = await getProjectOverrides(baseProjects.map((p: any) => p.id)).catch(e => { console.error("MongoDB Overrides Error:", e); return []; });
+  console.log("TOTAL FETCHED PROJECTS:", baseProjects.length);
   const allProjects = [
     ...applyProjectOverrides(baseProjects, overrides),
     ...(mongoAgencyProjects || [])

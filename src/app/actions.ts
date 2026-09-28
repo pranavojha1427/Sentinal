@@ -6,29 +6,23 @@ import { getMongoProjects } from "@/lib/project-store";
 export async function getAIHealthScores() {
   const supabase = await createClient();
   let projects: any[] = [];
-  let page = 0;
+  // Fetch all projects using pagination IN PARALLEL to avoid timeouts
   const pageSize = 1000;
-  let fetchMore = true;
-
-  while (fetchMore) {
-    const { data, error } = await supabase
+  const estimatedTotal = 12000;
+  const pages = Math.ceil(estimatedTotal / pageSize);
+  
+  const promises = Array.from({ length: pages }).map((_, page) => 
+    supabase
       .from("projects")
       .select("id, original_cost, revised_cost, cumulative_expenditure, physical_progress, sector, agency, state, land_acquisition_issue, forest_clearance_issue, contractor_delay, burn_rate_6m, phys_burn_rate_6m")
-      .range(page * pageSize, (page + 1) * pageSize - 1);
-    
-    if (error) {
-      console.error("Error fetching from supabase", error);
-      break;
-    }
-    
-    if (data && data.length > 0) {
-      projects = [...projects, ...data];
-      page++;
-      if (data.length < pageSize) fetchMore = false;
-    } else {
-      fetchMore = false;
-    }
+      .range(page * pageSize, (page + 1) * pageSize - 1)
+  );
+
+  const results = await Promise.all(promises);
+  for (const res of results) {
+    if (res.data) projects.push(...res.data);
   }
+
 
     // Append MongoDB projects so custom proposals also get AI Health Scores
   const mongoProjects = await getMongoProjects().catch(e => { console.error("Mongo Error in actions:", e); return []; });
@@ -96,6 +90,44 @@ export async function getAIHealthScores() {
           schedule_risk_score: schedule_risk_score.toFixed(0)
       };
   });
+
+  
+  try {
+      const pythonPayload = {
+          projects: projects.map(p => ({
+              project_id: p.id.toString(),
+              original_cost: scores[p.id]?._raw?.original_cost || 0,
+              revised_cost: scores[p.id]?._raw?.revised_cost || 0,
+              physical_progress: scores[p.id]?._raw?.physical_progress || 0
+          }))
+      };
+
+      const res = await fetch("https://administered-beings-evans-pilot.trycloudflare.com/api/ml/shap-bulk", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(pythonPayload)
+      });
+      
+      if (res.ok) {
+          const mlResults = await res.json();
+          for (const pid of Object.keys(mlResults)) {
+              if (scores[pid]) {
+                  scores[pid].SHAP_Explanation = [ mlResults[pid].natural_language_explanation ];
+              }
+          }
+      } else {
+          console.error("Python ML API error:", res.status);
+      }
+  } catch (e) {
+      console.error("Failed to reach Python ML API:", e);
+  }
+  
+  // Cleanup
+  for (const pid of Object.keys(scores)) {
+      if (scores[pid]) {
+          delete scores[pid]._raw;
+      }
+  }
 
   return scores;
 }

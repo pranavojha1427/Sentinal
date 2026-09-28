@@ -1,4 +1,3 @@
-
 "use client";
 import { useState, useEffect } from "react";
 import { Bell } from "lucide-react";
@@ -22,9 +21,20 @@ export function NotificationBell() {
     setNotifications(notifications.map(n => ({...n, isRead: true})));
   };
 
+  const handleToggle = () => {
+    if (open) {
+      // Clear notifications from UI once the dropdown is closed (they have been seen and marked as read)
+      setNotifications(notifications.filter(n => !n.isRead));
+    } else {
+      // Mark as read when opening
+      markRead();
+    }
+    setOpen(!open);
+  };
+
   return (
     <div className="relative">
-      <button onClick={() => { setOpen(!open); markRead(); }} className="relative p-2 text-slate-600 hover:text-slate-900">
+      <button onClick={handleToggle} className="relative p-2 text-slate-600 hover:text-slate-900">
         <Bell className="w-5 h-5" />
         {unreadCount > 0 && (
           <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full"></span>

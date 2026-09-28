@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { scaleLinear } from "d3-scale";
 import { createClient } from "@supabase/supabase-js";
-import { geoMercator, geoPath, type GeoPermissibleObjects } from "d3-geo";
+import { geoMercator, geoIdentity, geoPath, type GeoPermissibleObjects } from "d3-geo";
 import type { FeatureCollection, Feature, Geometry } from "geojson";
 
 const colorScale = scaleLinear<string>()
@@ -31,7 +31,7 @@ interface StatePath {
   d: string;
 }
 
-export default function StateRiskMap({ projects, selectedState, onStateSelect }: { projects: ProjectData[], selectedState?: string, onStateSelect?: (state: string) => void }) {
+export default function StateRiskMap({ projects, selectedState, country = "India", onStateSelect }: { projects: ProjectData[], selectedState?: string, country?: string, onStateSelect?: (state: string) => void }) {
   const data = projects || [];
   const [loading, setLoading] = useState(true);
   const [tooltipContent, setTooltipContent] = useState("");
@@ -45,6 +45,86 @@ export default function StateRiskMap({ projects, selectedState, onStateSelect }:
 
   // Load GeoJSON and pre-compute SVG paths
   useEffect(() => {
+    setLoading(true);
+    
+    if (country === "All") {
+        setStatePaths([]);
+        setLoading(false);
+        return;
+      }
+      if (country !== "India") {
+      let hcPrefix = "";
+      let geoUrl = "";
+      
+      if (country === "China") {
+        geoUrl = "https://raw.githubusercontent.com/codeforamerica/click_that_hood/master/public/data/china.geojson";
+      } else {
+        if (country === "Russia") hcPrefix = "ru";
+        else if (country === "Brazil") hcPrefix = "br";
+        else if (country === "South Africa") hcPrefix = "za";
+        
+        if (hcPrefix) {
+          geoUrl = `https://code.highcharts.com/mapdata/countries/${hcPrefix}/${hcPrefix}-all.geo.json`;
+        }
+      }
+      
+      if (!geoUrl) {
+        setStatePaths([]);
+        setLoading(false);
+        return;
+      }
+      
+      fetch(geoUrl)
+        .then((res) => res.json())
+        .then((geojson: FeatureCollection) => {
+          // Detect if the coordinates are already projected (Cartesian) or raw Long/Lat
+          let isProjected = false;
+          try {
+            let coords = geojson.features[0].geometry.coordinates as any;
+            while (Array.isArray(coords[0])) {
+              coords = coords[0];
+            }
+            if (Math.abs(coords[0]) > 180) {
+              isProjected = true;
+            }
+          } catch (e) {
+            // fallback
+          }
+
+          const projection = isProjected
+            ? geoIdentity()
+                .reflectY(true)
+                .fitExtent(
+                  [[30, 30], [WIDTH - 30, HEIGHT - 30]],
+                  geojson as any
+                )
+            : geoMercator()
+                .fitExtent(
+                  [[30, 30], [WIDTH - 30, HEIGHT - 30]],
+                  geojson
+                );
+
+          const path = geoPath().projection(projection as any);
+          
+          const paths = geojson.features
+            .map((feat) => ({
+              name: (feat.properties?.name as string) || "Unknown",
+              d: path(feat as GeoPermissibleObjects) || "",
+            }))
+            .filter((sp) => sp.d.length > 0);
+            
+          setStatePaths(paths);
+          setLoading(false);
+        })
+        .catch((err) => {
+          console.error("Error loading BRICS map:", err);
+          setStatePaths([]);
+          setLoading(false);
+        });
+      return;
+    }
+
+    // Load India map
     fetch("/india.geojson")
       .then((res) => res.json())
       .then((geojson: FeatureCollection) => {
@@ -72,9 +152,9 @@ export default function StateRiskMap({ projects, selectedState, onStateSelect }:
 
         setStatePaths(paths);
       })
-      .catch((err) => console.error("Error loading map:", err))
+      .catch((err) => console.error("Error loading India map:", err))
       .finally(() => setLoading(false));
-  }, []);
+  }, [country]);
 
   const getRiskScore = useCallback(
     (stateName: string) => {
@@ -85,6 +165,7 @@ export default function StateRiskMap({ projects, selectedState, onStateSelect }:
           (p.state.toLowerCase().includes(sn) ||
             sn.includes(p.state.toLowerCase()))
       );
+          
       if (matched.length === 0) return { risk: -1, count: 0 };
 
       const totalRisk = matched.reduce((acc, p) => {
@@ -101,7 +182,7 @@ export default function StateRiskMap({ projects, selectedState, onStateSelect }:
       }, 0);
       return { risk: Math.min(100, totalRisk / matched.length), count: matched.length };
     },
-    [data]
+    [data, country]
   );
 
   if (loading) {
@@ -141,6 +222,13 @@ export default function StateRiskMap({ projects, selectedState, onStateSelect }:
       </div>
 
       {/* SVG Map */}
+      {statePaths.length === 0 && country !== "India" ? (
+        <div className="w-full h-full flex flex-col items-center justify-center text-slate-500 font-mono bg-slate-50 border-2 border-dashed border-slate-300 min-h-[400px]">
+          <span className="text-4xl mb-4">🌍</span>
+          <p>GeoJSON boundaries for {country} (BRICS Expansion)</p>
+          <p className="text-xs mt-2 text-slate-400">Loading dynamic GIS mapping nodes...</p>
+        </div>
+      ) : (
       <svg
         viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
         className="w-full h-auto"
@@ -174,6 +262,7 @@ export default function StateRiskMap({ projects, selectedState, onStateSelect }:
           );
         })}
       </svg>
+      )}
     </div>
   );
 }

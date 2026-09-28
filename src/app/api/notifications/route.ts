@@ -10,10 +10,6 @@ export async function GET() {
   const client = await clientPromise;
   const db = client.db(DB_NAME);
   
-  // Find recipient based on role/agency/ministry
-  let query: any = { userId: session.id };
-  // But actually, notifications might be sent to 'role:admin' or 'ministry:Ministry of Coal'
-  // Let's broaden the query:
   const queries: any[] = [{ userId: session.id }];
   if (session.role === "admin") queries.push({ targetRole: "admin" });
   if (session.role === "agency") queries.push({ targetRole: "agency" });
@@ -21,7 +17,7 @@ export async function GET() {
   if (session.agency) queries.push({ targetAgency: session.agency });
 
   const notifications = await db.collection(NOTIFICATIONS_COLLECTION)
-    .find({ $or: queries })
+    .find({ $and: [{ $or: queries }, { isRead: { $ne: true } }] })
     .sort({ createdAt: -1 })
     .limit(50)
     .toArray();
@@ -45,4 +41,3 @@ export async function PUT(req: Request) {
   }
   return NextResponse.json({ success: true });
 }
-

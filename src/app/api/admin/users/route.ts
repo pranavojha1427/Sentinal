@@ -15,12 +15,18 @@ export async function POST(req: Request) {
     const ministry = String(body.ministry ?? "").trim() || undefined;
     const agency = String(body.agency ?? "").trim() || undefined;
     const state = String(body.state ?? "").trim() || undefined;
+    const country = String(body.country ?? "").trim() || undefined;
 
     // Normalizing role naming
     if (role === "state admin") role = "state_admin";
+    if (role === "country admin") role = "admin";
 
-    if (!name || !email || !password || !ROLES.includes(role as any) || role === "admin") {
+    if (!name || !email || !password || !ROLES.includes(role as any)) {
       return NextResponse.json({ error: "Invalid account details." }, { status: 400 });
+    }
+
+    if (role === "admin" && admin.role !== "admin") {
+      return NextResponse.json({ error: "Only Central Admins can create Country Admins." }, { status: 403 });
     }
 
     // Role-based creation limits
@@ -45,6 +51,7 @@ export async function POST(req: Request) {
     if (ministry) newUser.ministry = ministry;
     if (agency) newUser.agency = agency;
     if (state) newUser.state = state;
+    if (country) newUser.country = country;
 
     await users.insertOne(newUser);
     return NextResponse.json({ success: true });

@@ -10,6 +10,14 @@ const MapPicker = dynamic(() => import("@/components/InspectorMapPicker"), {
   loading: () => <div className="h-64 w-full bg-slate-100 animate-pulse flex items-center justify-center text-slate-400">Loading Map...</div>
 });
 
+const stateDemographics: Record<string, { population: string, infraDeficit: number, priorityMultiplier: number }> = {
+  "West Bengal": { population: "91.3M", infraDeficit: 65, priorityMultiplier: 1.4 },
+  "Odisha": { population: "41.9M", infraDeficit: 72, priorityMultiplier: 1.6 },
+  "Maharashtra": { population: "112.4M", infraDeficit: 45, priorityMultiplier: 1.1 },
+  "Uttar Pradesh": { population: "199.8M", infraDeficit: 78, priorityMultiplier: 1.8 },
+  "Gujarat": { population: "60.4M", infraDeficit: 35, priorityMultiplier: 1.0 },
+};
+
 export default function AdminHotspots({ currentUser }: { currentUser?: any }) {
   const [unassignedComplaints, setUnassignedComplaints] = useState<any[]>([]);
   const [hotspots, setHotspots] = useState<any[]>([]);
@@ -140,26 +148,43 @@ export default function AdminHotspots({ currentUser }: { currentUser?: any }) {
           <div className="p-8 text-center bg-white border border-slate-200 rounded text-slate-500">No new potential hotspots detected.</div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {unassignedComplaints.map((group, idx) => (
-              <div key={idx} className="bg-white p-6 border border-slate-200 shadow-sm rounded-lg relative overflow-hidden">
+            {unassignedComplaints.map((group, idx) => {
+              const demo = stateDemographics[group.state] || { population: "N/A", infraDeficit: 50, priorityMultiplier: 1.0 };
+              const severityScore = Math.round(group.complaints.length * demo.priorityMultiplier * 10);
+              
+              return (
+              <div key={idx} className="bg-white p-6 border border-slate-200 shadow-sm rounded-lg relative overflow-hidden flex flex-col justify-between">
                 <div className="absolute top-0 left-0 w-1 h-full bg-rose-500"></div>
-                <div className="flex justify-between items-start mb-4">
-                  <div>
-                    <span className="text-xs font-bold px-2 py-1 bg-rose-100 text-rose-700 rounded-full">{group.category}</span>
-                    <div className="text-slate-700 font-semibold mt-3 flex items-center"><MapPin className="w-4 h-4 mr-1 text-slate-400"/> {group.state} Region</div>
+                <div>
+                  <div className="flex justify-between items-start mb-4">
+                    <div>
+                      <span className="text-xs font-bold px-2 py-1 bg-rose-100 text-rose-700 rounded-full">{group.category}</span>
+                      <div className="text-slate-700 font-semibold mt-3 flex items-center"><MapPin className="w-4 h-4 mr-1 text-slate-400"/> {group.state} Region</div>
+                    </div>
+                    <div className="text-center">
+                      <span className="text-3xl font-black text-slate-800">{group.complaints.length}</span>
+                      <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Complaints</div>
+                    </div>
                   </div>
-                  <div className="text-center">
-                    <span className="text-3xl font-black text-slate-800">{group.complaints.length}</span>
-                    <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Complaints</div>
-                  </div>
-                </div>
 
-                <div className="space-y-3 mt-6 border-t border-slate-100 pt-4 h-32 overflow-y-auto pr-2">
+                  <div className="bg-slate-50 border border-slate-200 rounded p-3 mb-4 flex items-center justify-between">
+                    <div>
+                      <p className="text-[10px] uppercase font-mono text-slate-500">Demographics</p>
+                      <p className="text-xs font-semibold text-slate-700">Pop: {demo.population} | Deficit: {demo.infraDeficit}%</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-[10px] uppercase font-mono text-slate-500">Priority Score</p>
+                      <p className="text-sm font-black text-rose-600">{severityScore}</p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3 border-t border-slate-100 pt-4 h-24 overflow-y-auto pr-2">
                   {group.complaints.map((c: any) => (
                     <div key={c.id} className="text-sm border-l-2 border-slate-200 pl-3">
                       <span className="font-semibold text-slate-700">{c.citizen_name || 'Anonymous'}:</span> <span className="text-slate-600">{c.description}</span>
                     </div>
                   ))}
+                  </div>
                 </div>
 
                 <div className="mt-6 pt-4 border-t border-slate-100">
@@ -168,7 +193,7 @@ export default function AdminHotspots({ currentUser }: { currentUser?: any }) {
                   </button>
                 </div>
               </div>
-            ))}
+            );})}
           </div>
         )}
       </div>

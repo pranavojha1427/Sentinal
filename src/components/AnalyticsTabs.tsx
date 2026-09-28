@@ -75,7 +75,7 @@ function AgencyTab({ data }: { data: AgencyRow[] }) {
         </p>
       </CardHeader>
       <CardContent className="p-0 overflow-x-auto">
-        <Table className="min-w-[800px]">
+        <Table className="w-full min-w-[1000px]">
           <TableHeader>
             <TableRow className="border-slate-200 hover:bg-slate-200/50">
               <TableHead className="font-mono text-slate-600">#</TableHead>
@@ -306,7 +306,7 @@ function AlertsTab({ alerts }: { alerts: Alert[] }) {
         </CardHeader>
         <CardContent className="p-0 overflow-x-auto">
           <div className="max-h-[600px] overflow-y-auto">
-            <Table className="min-w-[800px]">
+            <Table className="w-full min-w-[1000px]">
               <TableHeader className="sticky top-0 bg-white z-10">
                 <TableRow className="border-slate-200 hover:bg-slate-200/50">
                   <TableHead className="font-mono text-slate-600">ID</TableHead>
