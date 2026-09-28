@@ -71,7 +71,7 @@ export function AdminAccountManager({ currentUser }: { currentUser?: any }) {
 
   return (
     <div className="bg-white border-2 border-slate-200 p-6 max-w-4xl">
-      <h2 className="font-black text-xl uppercase">{isCentralAdmin ? "Central Admin Platform Provisioning" : "State Admin Ministry Provisioning"}</h2>
+      <h2 className="font-black text-xl uppercase">{isBricsAdmin ? "Global Admin Platform Provisioning" : isCountryAdmin ? "Country Admin Platform Provisioning" : "State Admin Ministry Provisioning"}</h2>
       <p className="text-xs font-mono text-slate-500 mt-1 mb-6">ADMIN ONLY A PRIVILEGED ROLES ARE PROVISIONED HERE</p>
       
       {message && <div className="mb-4 p-3 bg-emerald-50 text-emerald-700 text-sm font-semibold rounded">{message}</div>}
