@@ -2,6 +2,7 @@
 
 import { FormEvent, useState } from "react";
 import { Save } from "lucide-react";
+import { BRICS_STATES, COUNTRIES } from "@/lib/constants";
 
 type Project = any;
 
@@ -20,15 +21,7 @@ const SECTORS = [
   "Urban Public Transport", "Waste & Water", "Water Resources", "Others"
 ];
 
-const STATES = [
-  "Andaman and Nicobar Islands", "Andhra Pradesh", "Arunachal Pradesh", "Assam", 
-  "Bihar", "Chandigarh", "Chhattisgarh", "Dadra and Nagar Haveli and Daman and Diu", 
-  "Delhi", "Goa", "Gujarat", "Haryana", "Himachal Pradesh", "Jammu and Kashmir", 
-  "Jharkhand", "Karnataka", "Kerala", "Ladakh", "Lakshadweep", "Madhya Pradesh", 
-  "Maharashtra", "Manipur", "Meghalaya", "Mizoram", "Multiple States", "Nagaland", 
-  "Odisha", "Puducherry", "Punjab", "Rajasthan", "Sikkim", "Tamil Nadu", 
-  "Telangana", "Tripura", "Uttar Pradesh", "Uttarakhand", "West Bengal"
-];
+
 
 const MINISTRIES = [
   "Department for Promotion of Industry & Internal Trade",
