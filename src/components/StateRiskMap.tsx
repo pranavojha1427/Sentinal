@@ -5,6 +5,7 @@ import { scaleLinear } from "d3-scale";
 import { createClient } from "@supabase/supabase-js";
 import { geoMercator, geoIdentity, geoPath, type GeoPermissibleObjects } from "d3-geo";
 import type { FeatureCollection, Feature, Geometry } from "geojson";
+import { BRICS_STATES } from "@/lib/constants";
 
 const colorScale = scaleLinear<string>()
   .domain([0, 50, 100])
@@ -177,14 +178,26 @@ export default function StateRiskMap({ projects, selectedState, country = "India
   const getRiskScore = useCallback(
     (stateName: string, d?: string) => {
       const sn = stateName.toLowerCase();
-      const aliases = REGION_MAPPING[sn] || [];
-      const matched = data.filter(
-        (p) =>
-          p.state &&
-          (p.state.toLowerCase().includes(sn) ||
-            sn.includes(p.state.toLowerCase()) ||
-            aliases.some(a => p.state.toLowerCase().includes(a) || a.includes(p.state.toLowerCase())))
-      );
+      let matched: any[] = [];
+      if (country === "All") {
+          if (!["India", "Brazil", "Russia", "China", "South Africa"].includes(stateName)) {
+              return { risk: -1, count: 0 };
+          }
+          const targetCountryStates = BRICS_STATES[stateName] || [];
+          matched = data.filter(p => {
+              if (!p.state) return false;
+              return targetCountryStates.some(s => s === p.state || p.state.toLowerCase().includes(s.toLowerCase()));
+          });
+      } else {
+          const aliases = REGION_MAPPING[sn] || [];
+          matched = data.filter(
+            (p) =>
+              p.state &&
+              (p.state.toLowerCase().includes(sn) ||
+                sn.includes(p.state.toLowerCase()) ||
+                aliases.some(a => p.state.toLowerCase().includes(a) || a.includes(p.state.toLowerCase())))
+          );
+      }
 
       if (matched.length === 0) {
         if (country !== "India" && d) {
