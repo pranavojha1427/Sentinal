@@ -334,17 +334,17 @@ export function DashboardClientView({ allProjects, agencyData, benchResData, ale
 
 
   return (
-    <div className="p-8 bg-slate-50 min-h-screen text-slate-900 font-sans">
+    <div className="p-3 sm:p-5 md:p-8 bg-slate-50 min-h-screen text-slate-900 font-sans">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
         <div className="flex flex-col gap-2 w-full">
-          <h1 className="text-4xl font-bold tracking-tighter uppercase border-b-4 border-slate-300 pb-2 text-slate-900">
+          <h1 className="text-3xl md:text-4xl font-bold tracking-tighter uppercase border-b-4 border-slate-300 pb-2 text-slate-900">
             PragatiPulse
           </h1>
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 w-full">
             <p className="text-slate-600 font-mono text-sm uppercase">Infrastructure Project Monitoring Platform</p>
             <div className="flex flex-wrap items-center gap-3">
-              {!currentUser && <a href="/pulse" className="text-xs font-mono uppercase bg-indigo-600 text-white px-4 py-2 hover:bg-indigo-700 transition-colors font-bold shadow-[2px_2px_0px_0px_rgba(0,0,0₹)] border border-black whitespace-nowrap">Add Complaint</a>}
+              {!currentUser && <a href="/pulse" className="text-xs font-mono uppercase bg-indigo-600 text-white px-3 py-2 sm:px-4 sm:py-2 hover:bg-indigo-700 transition-colors font-bold shadow-[2px_2px_0px_0px_rgba(0,0,0₹)] border border-black whitespace-nowrap">Add Complaint</a>}
               
               {currentUser ? (
                 <>
@@ -365,7 +365,7 @@ export function DashboardClientView({ allProjects, agencyData, benchResData, ale
       </div>
 
       {/* Tab Navigation */}
-        <div className="flex gap-1 border-b border-slate-200 mb-8 overflow-x-auto">
+        <div className="flex gap-1 border-b border-slate-200 mb-6 md:mb-8 overflow-x-auto pb-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
           {(() => {
              const tabs = [];
              if (!currentUser) {
@@ -416,7 +416,7 @@ export function DashboardClientView({ allProjects, agencyData, benchResData, ale
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`px-4 py-2 font-semibold text-sm transition-colors whitespace-nowrap ${
+                  className={`px-3 py-2 sm:px-4 sm:py-2 font-semibold text-sm transition-colors whitespace-nowrap ${
                     activeTab === tab.id
                       ? "border-b-2 border-slate-900 text-slate-900"
                       : "text-slate-500 hover:text-slate-700"
@@ -538,7 +538,7 @@ export function DashboardClientView({ allProjects, agencyData, benchResData, ale
                 )}
               </CardHeader>
               <CardContent className="pt-6 flex-1 flex flex-col">
-                <Suspense fallback={<div className="h-[400px] flex items-center justify-center text-slate-500 font-mono">Loading Map...</div>}>
+                <Suspense fallback={<div className="h-[300px] md:h-[400px] flex items-center justify-center text-slate-500 font-mono">Loading Map...</div>}>
                   <StateRiskMap country={countryFilter} projects={allProjects} selectedState={stateFilter || undefined} onStateSelect={(s) => setStateFilter(s === stateFilter ? null : s)} />
                 </Suspense>
               </CardContent>

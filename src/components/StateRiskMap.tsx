@@ -229,11 +229,11 @@ export default function StateRiskMap({ projects, selectedState, country = "India
   return (
     <div className="relative w-full h-full min-h-[500px]">
       {/* Legend */}
-      <div className="absolute top-4 left-4 z-10 bg-white border border-slate-300 p-4 rounded-lg shadow-lg">
-        <h4 className="text-slate-800 font-semibold mb-3 font-serif">
+      <div className="absolute top-2 left-2 md:top-4 md:left-4 z-10 bg-white/90 md:bg-white border border-slate-300 p-2 md:p-4 rounded shadow-lg pointer-events-none md:pointer-events-auto max-w-[200px] md:max-w-xs">
+        <h4 className="text-slate-800 font-semibold mb-1 md:mb-3 font-serif text-sm md:text-base">
           State Risk Heatmap
         </h4>
-        <div className="flex flex-row items-center gap-4 text-sm text-slate-600">
+        <div className="flex flex-col md:flex-row items-start md:items-center gap-1 md:gap-4 text-xs md:text-sm text-slate-600">
           <div className="flex items-center gap-2">
             <span className="w-3 h-3 rounded-full bg-emerald-500"></span>
             On Track
@@ -265,7 +265,7 @@ export default function StateRiskMap({ projects, selectedState, country = "India
       <svg
         viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
         className="w-full h-auto"
-        style={{ maxHeight: 720 }}
+        style={{ maxHeight: 720, width: "100%", height: "auto" }}
       >
         <rect width={WIDTH} height={HEIGHT} fill="#ffffff" />
 

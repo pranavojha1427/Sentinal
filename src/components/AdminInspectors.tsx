@@ -91,7 +91,7 @@ export default function AdminInspectors({ currentUser }: { currentUser?: any }) 
           ) : inspectors.length === 0 ? (
             <div className="p-8 text-center text-slate-500 bg-white border border-slate-200 rounded">No inspectors registered yet.</div>
           ) : (
-            <div className="bg-white border border-slate-200 rounded shadow-sm overflow-hidden">
+            <div className="bg-white border border-slate-200 rounded shadow-sm overflow-x-auto overflow-y-hidden">
               <table className="w-full text-left text-sm">
                 <thead>
                   <tr className="bg-slate-50 border-b border-slate-200 text-slate-600">
