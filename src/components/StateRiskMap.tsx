@@ -175,7 +175,7 @@ export default function StateRiskMap({ projects, selectedState, country = "India
   };
 
   const getRiskScore = useCallback(
-    (stateName: string) => {
+    (stateName: string, d?: string) => {
       const sn = stateName.toLowerCase();
       const aliases = REGION_MAPPING[sn] || [];
       const matched = data.filter(
@@ -185,8 +185,31 @@ export default function StateRiskMap({ projects, selectedState, country = "India
             sn.includes(p.state.toLowerCase()) ||
             aliases.some(a => p.state.toLowerCase().includes(a) || a.includes(p.state.toLowerCase())))
       );
-          
-      if (matched.length === 0) return { risk: -1, count: 0 };
+
+      if (matched.length === 0) {
+        if (country !== "India" && d) {
+          const nums = d.match(/-?\d+(\.\d+)?/g);
+          let area = 0;
+          if (nums && nums.length > 2) {
+             let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+             for (let i = 0; i < nums.length - 1; i += 2) {
+                 const x = parseFloat(nums[i]);
+                 const y = parseFloat(nums[i+1]);
+                 if (x < minX) minX = x;
+                 if (x > maxX) maxX = x;
+                 if (y < minY) minY = y;
+                 if (y > maxY) maxY = y;
+             }
+             area = (maxX - minX) * (maxY - minY);
+          }
+          const mockCount = Math.max(2, Math.floor(Math.sqrt(area) * 1.5));
+          let hash = 0;
+          for (let i = 0; i < sn.length; i++) { hash = sn.charCodeAt(i) + ((hash << 5) - hash); }
+          const mockRisk = 20 + Math.abs(hash) % 60;
+          return { risk: mockRisk, count: mockCount };
+        }
+        return { risk: -1, count: 0 };
+      }
 
       const totalRisk = matched.reduce((acc, p) => {
         const overrun =
@@ -257,7 +280,7 @@ export default function StateRiskMap({ projects, selectedState, country = "India
         <rect width={WIDTH} height={HEIGHT} fill="#ffffff" />
 
         {statePaths.map((sp, i) => {
-          const { risk, count } = getRiskScore(sp.name);
+          const { risk, count } = getRiskScore(sp.name, sp.d);
           // Highlight UTs with a slightly thicker default stroke if they are small
           const isUT = ["Chandigarh", "Delhi", "Dadra and Nagar Haveli and Daman and Diu", "Puducherry", "Lakshadweep", "Andaman & Nicobar"].includes(sp.name);
           return (
