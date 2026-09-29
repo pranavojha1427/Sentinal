@@ -48,14 +48,11 @@ export default function StateRiskMap({ projects, selectedState, country = "India
   useEffect(() => {
     setLoading(true);
     
+    let geoUrl = "";
     if (country === "All") {
-        setStatePaths([]);
-        setLoading(false);
-        return;
-      }
-      if (country !== "India") {
+      geoUrl = "https://code.highcharts.com/mapdata/custom/world.geo.json";
+    } else if (country !== "India") {
       let hcPrefix = "";
-      let geoUrl = "";
       
       if (country === "China") {
         geoUrl = "https://raw.githubusercontent.com/codeforamerica/click_that_hood/master/public/data/china.geojson";
@@ -68,8 +65,9 @@ export default function StateRiskMap({ projects, selectedState, country = "India
           geoUrl = `https://code.highcharts.com/mapdata/countries/${hcPrefix}/${hcPrefix}-all.geo.json`;
         }
       }
+    }
       
-      if (!geoUrl) {
+    if (!geoUrl) {
         setStatePaths([]);
         setLoading(false);
         return;
