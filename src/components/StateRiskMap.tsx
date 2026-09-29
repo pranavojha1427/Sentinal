@@ -206,7 +206,7 @@ export default function StateRiskMap({ projects, selectedState, country = "India
              }
              area = (maxX - minX) * (maxY - minY);
           }
-          const mockCount = Math.max(2, Math.floor(Math.sqrt(area) * 1.5));
+          const mockCount = Math.max(2, Math.floor(Math.sqrt(area) * 3 + (area / 150)));
           let hash = 0;
           for (let i = 0; i < sn.length; i++) { hash = sn.charCodeAt(i) + ((hash << 5) - hash); }
           const mockRisk = 20 + Math.abs(hash) % 60;
