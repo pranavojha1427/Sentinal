@@ -156,14 +156,34 @@ export default function StateRiskMap({ projects, selectedState, country = "India
       .finally(() => setLoading(false));
   }, [country]);
 
+  const REGION_MAPPING: Record<string, string[]> = {
+    "sverdlovsk": ["yekaterinburg"],
+    "bashkortostan": ["ufa"],
+    "udmurt": ["izhevsk"],
+    "altay": ["barnaul", "altai"],
+    "primor'ye": ["vladivostok", "primorsky"],
+    "rostov": ["rostov-on-don"],
+    "nizhegorod": ["nizhny novgorod"],
+    "perm'": ["perm"],
+    "city of st. petersburg": ["saint petersburg"],
+    "moskva": ["moscow"],
+    "moskovsskaya": ["moscow"],
+    "ul'yanovsk": ["ulyanovsk"],
+    "tyumen'": ["tyumen"],
+    "yaroslavl'": ["yaroslavl"],
+    "samara": ["tolyatti", "samara"]
+  };
+
   const getRiskScore = useCallback(
     (stateName: string) => {
       const sn = stateName.toLowerCase();
+      const aliases = REGION_MAPPING[sn] || [];
       const matched = data.filter(
         (p) =>
           p.state &&
           (p.state.toLowerCase().includes(sn) ||
-            sn.includes(p.state.toLowerCase()))
+            sn.includes(p.state.toLowerCase()) ||
+            aliases.some(a => p.state.toLowerCase().includes(a) || a.includes(p.state.toLowerCase())))
       );
           
       if (matched.length === 0) return { risk: -1, count: 0 };
