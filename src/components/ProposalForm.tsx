@@ -76,7 +76,7 @@ export function ProposalForm({ currentUser, onSuccess }: any) {
           <label className="text-xs font-semibold text-slate-500 uppercase">State</label>
           <select required className="border p-3 rounded-lg bg-white" value={form.state} onChange={e => setForm({...form, state: e.target.value})}>
             <option value="" disabled>Select State</option>
-            {STATES.map(s => <option key={s} value={s}>{s}</option>)}
+            {(BRICS_STATES[currentUser?.country] || BRICS_STATES['India']).map(s => <option key={s} value={s}>{s}</option>)}
           </select>
         </div>
         <div className="flex flex-col gap-1">

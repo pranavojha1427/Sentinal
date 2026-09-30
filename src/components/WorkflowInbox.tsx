@@ -47,7 +47,7 @@ export function WorkflowInbox({ currentUser, agencyRanks }: any) {
               <div>
                 <div className="flex items-center gap-2">
                   <h4 className="font-bold text-lg">{p.project_name}</h4>
-                  <span className="px-2 py-0.5 text-xs font-mono uppercase bg-slate-100 rounded">{p.status.replace(/_/g, ' ')}</span>
+                  <span className="px-2 py-0.5 text-xs font-mono uppercase bg-slate-100 rounded">{(p.status || 'unknown').replace(/_/g, ' ')}</span>
                 </div>
                 <p className="text-sm text-slate-600">Proposed by: {p.creatorName} ({p.creatorRole}) - {p.ministry}</p>
               </div>

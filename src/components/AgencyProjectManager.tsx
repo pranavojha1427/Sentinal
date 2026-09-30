@@ -164,7 +164,7 @@ export function AgencyProjectManager({ projects, agency }: { projects: Project[]
                 {type === "select" ? (
                   <select required className="w-full border border-slate-300 p-2.5 rounded text-sm font-sans bg-white focus:ring-2 focus:ring-blue-500 outline-none transition-all" value={form[key] ?? ""} onChange={e => set(key,e.target.value)}>
                     <option value="" disabled>Select {label}</option>
-                    {(key === "sector" ? SECTORS : key === "ministry" ? MINISTRIES : STATES).map(s => <option key={s} value={s}>{s}</option>)}
+                    {(key === "sector" ? SECTORS : key === "ministry" ? MINISTRIES : BRICS_STATES['India']).map(s => <option key={s} value={s}>{s}</option>)}
                   </select>
                 ) : (
                   <input required={key === "project_name"} type={type} step="any" className="w-full border border-slate-300 p-2.5 rounded text-sm font-sans bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none transition-all" value={Number.isNaN(form[key]) ? "" : (form[key] ?? "")} onChange={e => set(key,e.target.value)} />
