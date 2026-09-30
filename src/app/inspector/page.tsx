@@ -198,7 +198,7 @@ export default function InspectorPortal() {
                         {hotspots.map((h) => (
                             <div key={h.id} className="bg-white p-6 border border-slate-200 rounded-lg shadow-sm">
                                 <div className="flex justify-between items-start mb-4">
-                                    <span className={`px-2 py-1 text-xs font-bold rounded-full ${h.status === 'project_proposed' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}`}>{h.status.replace('_', ' ').toUpperCase()}</span>
+                                    <span className={`px-2 py-1 text-xs font-bold rounded-full ${(h.status === 'project_proposed' || h.status === 'project_raised') ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}`}>{h.status.replace('_', ' ').toUpperCase()}</span>
                                     <span className="text-xs font-mono text-slate-400">ID: {h.id.split('-')[0]}</span>
                                 </div>
                                 <h3 className="font-bold text-lg text-slate-800 mb-1">{h.infrastructure_category} Issue</h3>
@@ -208,7 +208,7 @@ export default function InspectorPortal() {
                                     <strong className="text-slate-700">{h.request_count}</strong> similar complaints grouped here.
                                 </div>
 
-                                {h.status === 'project_proposed' ? (
+                                {(h.status === 'project_proposed' || h.status === 'project_raised') ? (
                                     <div className="text-emerald-600 text-sm font-semibold flex items-center"><CheckCircle2 className="w-4 h-4 mr-2"/> Examined & Proposed</div>
                                 ) : (
                                     <button onClick={() => setSelectedHotspot(h)} className="w-full py-2 bg-indigo-50 text-indigo-700 font-semibold rounded hover:bg-indigo-100 transition flex justify-between items-center px-4">
