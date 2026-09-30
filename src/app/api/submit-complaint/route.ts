@@ -46,7 +46,7 @@ export async function POST(req: Request) {
     let category = "Others";
 
     try {
-      const res = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=" + process.env.GOOGLE_API_KEY, {
+      let res = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=" + process.env.GOOGLE_API_KEY, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -54,6 +54,18 @@ export async function POST(req: Request) {
           generationConfig: { temperature: 0.1 }
         })
       });
+      
+      if (res.status === 503) {
+          await new Promise(r => setTimeout(r, 1500));
+          res = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=" + process.env.GOOGLE_API_KEY, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: prompt }] }],
+              generationConfig: { temperature: 0.1 }
+            })
+          });
+      }
 
       if (res.ok) {
         const data = await res.json();

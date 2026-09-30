@@ -122,7 +122,7 @@ Answer using Markdown with tables if useful. Be analytical, professional, and cl
 Provide deep intelligence based solely on the provided project context.`;
 
     // 8. Fetch from Gemini AI (Google)
-    const res = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent", {
+    let res = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -148,7 +148,7 @@ Provide deep intelligence based solely on the provided project context.`;
       throw new Error(`Gemini API error: ${res.status}`);
     }
 
-    const data = await res.json();
+    if (res.status === 503) { await new Promise(r => setTimeout(r, 1500)); res = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent", { method: "POST", headers: { "Content-Type": "application/json", "x-goog-api-key": process.env.GOOGLE_API_KEY! }, body: JSON.stringify(payload) }); } const data = await res.json();
     let responseText = data.candidates?.[0]?.content?.parts?.[0]?.text || "No response received.";
     
     console.log("Final ResponseText:", responseText);
