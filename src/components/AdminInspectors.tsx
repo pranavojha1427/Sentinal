@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { UserPlus, Shield, Loader2, MapPin, Briefcase, Phone, Hash } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
+import { BRICS_STATES } from "@/lib/constants";
 
 export default function AdminInspectors({ currentUser }: { currentUser?: any }) {
   const [inspectors, setInspectors] = useState<any[]>([]);
