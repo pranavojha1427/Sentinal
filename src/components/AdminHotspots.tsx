@@ -181,7 +181,7 @@ export default function AdminHotspots({ currentUser }: { currentUser?: any }) {
                   <div className="space-y-3 border-t border-slate-100 pt-4 h-24 overflow-y-auto pr-2">
                   {group.complaints.map((c: any) => (
                     <div key={c.id} className="text-sm border-l-2 border-slate-200 pl-3">
-                      <span className="font-semibold text-slate-700">{c.citizen_name || 'Anonymous'}:</span> <span className="text-slate-600">{c.description}</span>
+                      <span className="font-semibold text-slate-700">{c.name || 'Anonymous'}:</span> <span className="text-slate-600">{c.translated_text}</span>
                     </div>
                   ))}
                   </div>
